@@ -1,0 +1,25 @@
+<?php
+
+namespace App\Patterns\Strategy;
+
+use App\Models\Job;
+use App\Models\RecruiterProfile;
+
+/**
+ * Concrete Strategy — Padrão Strategy.
+ * Estratégia de autorização para Recrutadores aprovados.
+ * O recrutador deve estar vinculado à mesma empresa da vaga E estar aprovado.
+ */
+class ApprovedRecruiterAuthorizationStrategy implements AuthorizationStrategyInterface
+{
+    public function isAuthorized(int $userId, Job $job): bool
+    {
+        $profile = RecruiterProfile::where('user_id', $userId)->first();
+
+        if (!$profile || !$profile->approved) {
+            return false;
+        }
+
+        return $profile->company_id == $job->company_id;
+    }
+}

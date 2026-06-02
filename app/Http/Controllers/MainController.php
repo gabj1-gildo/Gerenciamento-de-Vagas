@@ -1,0 +1,292 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Job;
+use App\Models\Companie;
+use App\Models\User;
+use App\Services\UserRegistrationService;
+
+/**
+ * MainController — Controlador principal do SyncMatch.
+ *
+ * Após a refatoração GoF, este controller delega:
+ *  - Criação de usuários → UserRegistrationService (Facade)
+ *    que por sua vez usa UserProfileFactory (Factory Method)
+ *
+ * O controller foca apenas em: receber request, validar, delegar e redirecionar.
+ */
+class MainController extends Controller
+{
+    public function __construct(
+        private readonly UserRegistrationService $registrationService
+    ) {}
+
+    public function home() {
+        if (session('user_role') === 'student') {
+            return redirect()->route('jobs.index');
+        }
+
+        $id = session('user_id');
+        $companies = Companie::where('user_id', $id)
+                            ->withCount('jobs')
+                            ->get()
+                            ->toArray();
+
+        return view('companies/index', ['companies' => $companies]);
+    }
+
+    public function companiesIndex() {
+        $id   = session('user_id');
+        $role = session('user_role');
+
+        if ($role === 'admin') {
+            $companies = Companie::withCount('jobs')->get()->toArray();
+        } else {
+            $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
+            if ($profile) {
+                $companies = Companie::where('id', $profile->company_id)
+                                    ->withCount('jobs')
+                                    ->get()
+                                    ->toArray();
+            } else {
+                $companies = [];
+            }
+        }
+        return view('companies/index', ['companies' => $companies]);
+    }
+
+    public function jobsIndex(Request $request) {
+        $query = Job::with('company');
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%')
+                  ->orWhereHas('company', function($compQuery) use ($search) {
+                      $compQuery->where('name', 'like', '%' . $search . '%');
+                  });
+            });
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->filled('mode')) {
+            $query->where('mode', $request->input('mode'));
+        }
+
+        $jobs = $query->get()->toArray();
+        return view('jobs/index', ['jobs' => $jobs]);
+    }
+
+    public function companiesCreate() {
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Apenas administradores podem cadastrar empresas.');
+        }
+        return view('companies/create');
+    }
+
+    public function companiesShow($id) {
+        $companies = Companie::where('id', $id)->get()->toArray();
+        $jobs      = Job::where('company_id', $id)->with('company')->get()->toArray();
+
+        // Se for admin ou dono da empresa, carregar recrutadores
+        $recruiters = [];
+        $company    = Companie::find($id);
+        if (session('user_role') === 'admin' || ($company && $company->user_id == session('user_id'))) {
+            $recruiters = \App\Models\RecruiterProfile::where('company_id', $id)
+                                                    ->with('user')
+                                                    ->get();
+        }
+
+        return view('companies/show', [
+            'companies'  => $companies,
+            'jobs'       => $jobs,
+            'recruiters' => $recruiters
+        ]);
+    }
+
+    public function jobsShow($id) {
+        $job = Job::with('company')->findOrFail($id)->toArray();
+        return view('jobs/show', ['job' => $job]);
+    }
+
+    public function novoUsuario() {
+        $companies = Companie::all()->toArray();
+        return view('novo_usuario', compact('companies'));
+    }
+
+    /**
+     * Valida os dados do formulário e delega o registro ao UserRegistrationService.
+     * O Service usa a UserProfileFactory (Factory Method) internamente.
+     */
+    public function salvarUsuario(Request $request) {
+        $request->validate([
+            'nome'             => 'required|string|max:200',
+            'email'            => 'required|email:rfc,dns|unique:users,email',
+            'role'             => 'required|in:student,recruiter_existing,recruiter_new,admin',
+            'company_id'       => 'required_if:role,recruiter_existing|nullable|exists:companies,id',
+            'company_name'     => 'required_if:role,recruiter_new|nullable|string|max:200',
+            'company_cnpj'     => 'required_if:role,recruiter_new|nullable|string|max:25',
+            'company_city'     => 'required_if:role,recruiter_new|nullable|string|max:100',
+            'senha'            => 'required|string|min:6|confirmed',
+        ], [
+            'nome.required'          => 'O campo Nome é obrigatório.',
+            'email.required'         => 'O campo E-mail é obrigatório.',
+            'email.unique'           => 'Este e-mail já está cadastrado no sistema.',
+            'role.required'          => 'A escolha do tipo de conta é obrigatória.',
+            'company_id.required_if' => 'A seleção da empresa é obrigatória para recrutadores.',
+            'company_name.required_if' => 'O nome da empresa é obrigatório.',
+            'company_cnpj.required_if' => 'O CNPJ da empresa é obrigatório.',
+            'company_city.required_if' => 'A cidade da empresa é obrigatória.',
+            'senha.required'         => 'O campo senha é obrigatório.',
+            'senha.min'              => 'A senha deve ter no mínimo :min caracteres.',
+            'senha.confirmed'        => 'A confirmação de senha não confere.',
+        ]);
+
+        // Delega ao Service que usa Factory Method para criar o perfil correto
+        $this->registrationService->register($request->all());
+
+        return redirect()->route('login')
+                         ->with('success', 'Cadastro realizado com sucesso! Faça login para continuar.');
+    }
+
+    public function companiesEdit($id) {
+        $company = Companie::findOrFail($id);
+        return view('companies/edit', ['company' => $company]);
+    }
+
+    public function jobsEdit($id) {
+        $iduser    = session('user_id');
+        $companies = Companie::where('user_id', $iduser)->get()->toArray();
+        $job       = Job::where('id', $id)->get()->toArray();
+        return view('jobs/edit', ['jobs' => $job, 'companies' => $companies]);
+    }
+
+    public function companiesUpdate(Request $request) {
+        $Companie              = Companie::findOrFail($request->input('id'));
+        $Companie->name        = $request->input('name');
+        $Companie->cnpj        = $request->input('cnpj');
+        $Companie->area        = $request->input('area');
+        $Companie->city        = $request->input('city');
+        $Companie->description = $request->input('description');
+        $Companie->updated_at  = now();
+        $Companie->save();
+
+        return redirect()->route('companies.index')->with('success', 'Empresa atualizada com sucesso!');
+    }
+
+    public function jobsUpdate(Request $request) {
+        $Job              = Job::findOrFail($request->input('id'));
+        $Job->company_id  = $request->input('company_id');
+        $Job->title       = $request->input('title');
+        $Job->description = $request->input('description');
+        $Job->type        = $request->input('type');
+        $Job->mode        = $request->input('mode');
+        $Job->salary_range = $request->input('salary_range');
+        $Job->status      = $request->input('status');
+        $Job->updated_at  = now();
+        $Job->save();
+
+        return redirect()->route('jobs.index')->with('success', 'Vaga atualizada com sucesso!');
+    }
+
+    public function jobsDestroy($id) {
+        $job = Job::find($id);
+        if ($job) {
+            $job->delete();
+        }
+        return redirect()->route('jobs.index')->with('success', 'Vaga deletada com sucesso!');
+    }
+
+    public function companiesDestroy($id) {
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Apenas administradores podem excluir empresas.');
+        }
+
+        $Companie = Companie::find($id);
+        if ($Companie) {
+            $Companie->delete();
+        }
+        return redirect()->route('companies.index')->with('success', 'Empresa deletada com sucesso!');
+    }
+
+    public function companiesStore(Request $request) {
+        if (session('user_role') !== 'admin') {
+            abort(403, 'Apenas administradores podem cadastrar empresas.');
+        }
+
+        $Companie              = new Companie();
+        $Companie->name        = $request->input('name');
+        $Companie->cnpj        = $request->input('cnpj');
+        $Companie->area        = $request->input('area');
+        $Companie->city        = $request->input('city');
+        $Companie->description = $request->input('description');
+        $Companie->user_id     = session('user_id');
+        $Companie->updated_at  = now();
+        $Companie->save();
+
+        return redirect()->route('companies.index')->with('success', 'Empresa cadastrada com sucesso!');
+    }
+
+    public function jobsCreate() {
+        $id   = session('user_id');
+        $role = session('user_role');
+
+        if ($role === 'recruiter') {
+            $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
+            if (!$profile || !$profile->approved) {
+                return redirect()->route('jobs.index')
+                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada pela empresa.']);
+            }
+            $companies = Companie::where('id', $profile->company_id)->get()->toArray();
+        } else {
+            $companies = Companie::all()->toArray();
+        }
+
+        return view('jobs/create', ['companies' => $companies]);
+    }
+
+    public function jobsStore(Request $request) {
+        $id   = session('user_id');
+        $role = session('user_role');
+
+        if ($role === 'recruiter') {
+            $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
+            if (!$profile || !$profile->approved) {
+                return redirect()->route('jobs.index')
+                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada pela empresa.']);
+            }
+        }
+
+        $Job               = new Job();
+        $Job->company_id   = $request->input('company_id');
+        $Job->title        = $request->input('title');
+        $Job->description  = $request->input('description');
+        $Job->type         = $request->input('type');
+        $Job->mode         = $request->input('mode');
+        $Job->salary_range = $request->input('salary_range');
+        $Job->status       = $request->input('status');
+        $Job->updated_at   = now();
+        $Job->save();
+
+        return redirect()->route('jobs.index')->with('success', 'Vaga criada com sucesso!');
+    }
+
+    public function approveRecruiter($id) {
+        $profile = \App\Models\RecruiterProfile::findOrFail($id);
+        $company = Companie::find($profile->company_id);
+
+        if (session('user_role') !== 'admin' && (!$company || $company->user_id != session('user_id'))) {
+            abort(403, 'Acesso não autorizado para aprovar este recrutador.');
+        }
+
+        $profile->update(['approved' => true]);
+
+        return redirect()->back()->with('success', 'Recrutador aprovado com sucesso!');
+    }
+}
