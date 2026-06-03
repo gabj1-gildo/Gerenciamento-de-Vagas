@@ -3,11 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\MainController;
+use App\Http\Controllers\MasterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Middleware\CheckLogin;
+use App\Http\Middleware\CheckMaster;
 use App\Http\Middleware\CheckSession;
-use Illuminate\Support\Facades\Auth;    
+use Illuminate\Support\Facades\Auth;
 
 Route::middleware([CheckSession::class])->group(function(){
     Route::get('/login', [AuthController::class, 'login'])->name('login');
@@ -45,6 +47,15 @@ Route::middleware([CheckLogin::class])->group(function () {
     Route::get('/jobs/{jobId}/applicants', [ApplicationController::class, 'jobApplications'])->name('job.applications');
     Route::post('/applications/{applicationId}/status', [ApplicationController::class, 'updateStatus'])->name('applications.updateStatus');
     Route::post('/recruiters/{id}/approve', [MainController::class, 'approveRecruiter'])->name('recruiters.approve');
+});
+
+// ─── Rotas do Super Admin (Master) ────────────────────────────────────────
+Route::middleware([CheckLogin::class, CheckMaster::class])->prefix('master')->name('master.')->group(function () {
+    Route::get('/', [MasterController::class, 'panel'])->name('panel');
+    Route::post('/users/{id}/role', [MasterController::class, 'updateRole'])->name('updateRole');
+    Route::post('/companies/create', [MasterController::class, 'createCompany'])->name('createCompany');
+    Route::post('/companies/{companyId}/admin', [MasterController::class, 'changeCompanyAdmin'])->name('changeCompanyAdmin');
+    Route::post('/companies/{companyId}/recruiters', [MasterController::class, 'linkRecruiter'])->name('linkRecruiter');
 });
 
 Route::get('/novo_usuario', [MainController::class, 'novoUsuario'])->name('novo_usuario');

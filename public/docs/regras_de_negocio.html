@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncMatch — Regras de Negócio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151e30;
+            --bg-card-hover: #1e293b;
+            --primary: #10b981;
+            --primary-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --accent-indigo: #6366f1;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-clr: rgba(255, 255, 255, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 186, 212, 0.05) 0%, transparent 40%);
+        }
+
+        .wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Navigation */
+        aside {
+            width: 280px;
+            background: #0f172a;
+            border-right: 1px solid var(--border-clr);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            text-decoration: none;
+            color: inherit;
+            margin-bottom: 2.5rem;
+        }
+
+        .brand .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #34d399, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .nav-item a {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-item a:hover, .nav-item.active a {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active a {
+            border: 1px solid var(--border-clr);
+            background: rgba(16, 185, 129, 0.15);
+            color: #a7f3d0;
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        /* Main Content */
+        main {
+            flex-grow: 1;
+            margin-left: 280px;
+            padding: 3rem 4rem;
+            max-width: 1300px;
+        }
+
+        .header-content {
+            margin-bottom: 3rem;
+            border-bottom: 1px solid var(--border-clr);
+            padding-bottom: 1.5rem;
+        }
+
+        .header-content h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #fff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-content p {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-clr);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            scroll-margin-top: 3rem;
+        }
+
+        .section-card h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .section-card h2 svg {
+            width: 24px;
+            height: 24px;
+            stroke: var(--primary);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* Accordeon de Regras */
+        .rules-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .rule-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .rule-item:hover {
+            border-color: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.02);
+        }
+
+        .rule-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #34d399;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rule-title span {
+            font-size: 0.85rem;
+            background: rgba(16, 185, 129, 0.15);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .rule-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .rule-desc strong {
+            color: var(--text-main);
+        }
+
+        /* Custom alert styles for rules */
+        .alert-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            margin-top: 1rem;
+            color: #fca5a5;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+        }
+
+        .alert-box svg {
+            width: 20px;
+            height: 20px;
+            stroke: #ef4444;
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        /* Matrix Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        th {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: #34d399;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge.sim {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+
+        .badge.nao {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+
+        .badge.parcial {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+        }
+
+        @media (max-width: 1024px) {
+            aside {
+                display: none;
+            }
+            main {
+                margin-left: 0;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <!-- Sidebar -->
+        <aside>
+            <a href="index.html" class="brand">
+                <span class="logo-text">SyncMatch</span>
+            </a>
+            
+            <p class="nav-title">Navegação</p>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.html">
+                    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Painel Principal
+                </a></li>
+            </ul>
+
+            <p class="nav-title" style="margin-top: 2rem;">Regras de Negócio</p>
+            <ul class="nav-menu">
+                <li class="nav-item active"><a href="#perfis">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Perfis & Acessos
+                </a></li>
+                <li class="nav-item"><a href="#empresas">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    Vínculo de Empresas
+                </a></li>
+                <li class="nav-item"><a href="#vagas">
+                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    Gestão de Vagas
+                </a></li>
+                <li class="nav-item"><a href="#candidaturas">
+                    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Candidaturas
+                </a></li>
+                <li class="nav-item"><a href="#master">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Painel do Master
+                </a></li>
+            </ul>
+
+            <p class="nav-title" style="margin-top: 2rem;">Documentos</p>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="diagrama.html">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                    Diagramas & Fluxos
+                </a></li>
+                <li class="nav-item"><a href="especificacoes.html">
+                    <svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    Especificações Técnicas
+                </a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <div class="header-content">
+                <h1>Regras de Negócio e Políticas do Sistema</h1>
+                <p>Diretrizes operacionais, permissões e fluxos que governam o comportamento do SyncMatch.</p>
+            </div>
+
+            <!-- Perfis e Acesso -->
+            <section id="perfis" class="section-card">
+                <h2>
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+                    Perfis de Usuários e Matriz de Permissões
+                </h2>
+                <p class="desc" style="color: var(--text-muted); margin-bottom: 1.5rem;">
+                    O sistema possui quatro perfis principais identificados por cargos nativos. A seguir está a tabela consolidada de direitos e as regras que definem o papel de cada conta.
+                </p>
+
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-title">Candidato <span>student</span></div>
+                        <p class="rule-desc">
+                            Perfil voltado para pessoas que buscam colocação no mercado. Podem <strong>visualizar todas as vagas ativas</strong>, preencher seus dados de currículo (Telefone, Biografia, Habilidades, Educação e Experiência) e <strong>se candidatar a vagas</strong>. Não têm acesso a nenhuma empresa nem visualizam candidaturas de terceiros.
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Recrutador <span>recruiter</span></div>
+                        <p class="rule-desc">
+                            Perfil profissional vinculado a empresas. Pode gerenciar as vagas da sua empresa (cadastrar, atualizar e visualizar estatísticas) e examinar os candidatos inscritos nas vagas. Só pode interagir com os dados das empresas às quais <strong>seu perfil esteja explicitamente aprovado</strong>.
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Admin de Empresa <span>admin</span></div>
+                        <p class="rule-desc">
+                            O criador original da empresa no cadastro inicial, ou aquele designado pelo Master. Tem plenos poderes sobre os dados cadastrais da empresa e é o responsável direto por <strong>aprovar ou rejeitar recrutadores pendentes</strong> que solicitam vínculo àquela empresa específica.
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Super Admin <span>master</span></div>
+                        <p class="rule-desc">
+                            Possui todos os privilégios acima de forma global. Adicionalmente, é o único que pode <strong>promover/rebaixar cargos</strong> de usuários, vincular diretamente recrutadores sem necessidade de aprovação local, e transferir a administração de empresas entre usuários.
+                        </p>
+                    </div>
+                </div>
+
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.2rem; margin-top: 2.5rem; margin-bottom: 1rem; color: #34d399;">Matriz de Ações vs Perfis</h3>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ação no Sistema</th>
+                                <th>Candidato</th>
+                                <th>Recrutador</th>
+                                <th>Admin Empresa</th>
+                                <th>Master</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Candidatar-se a vagas</td>
+                                <td><span class="badge sim">Sim</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                            </tr>
+                            <tr>
+                                <td>Cadastrar/Editar vagas</td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge parcial">Aprovado</span></td>
+                                <td><span class="badge sim">Sim</span></td>
+                                <td><span class="badge sim">Sim</span></td>
+                            </tr>
+                            <tr>
+                                <td>Editar cadastro da empresa</td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge sim">Sim</span></td>
+                                <td><span class="badge sim">Sim</span></td>
+                            </tr>
+                            <tr>
+                                <td>Aprovar Recrutadores</td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge sim">Sim (Própria)</span></td>
+                                <td><span class="badge sim">Sim (Qualquer)</span></td>
+                            </tr>
+                            <tr>
+                                <td>Promover usuários / alterar cargos</td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge nao">Não</span></td>
+                                <td><span class="badge sim">Sim</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Vinculo e Empresas -->
+            <section id="empresas" class="section-card">
+                <h2>
+                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    Regras de Cadastro e Vínculo de Empresas
+                </h2>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-title">Criação de Nova Empresa</div>
+                        <p class="rule-desc">
+                            No cadastro de conta, se for selecionada a opção <strong>"Nova Empresa"</strong> (<code>recruiter_new</code>), os dados cadastrais da empresa (Nome, CNPJ, Cidade) devem ser fornecidos. Após o sucesso do cadastro, o usuário é criado como <code>recruiter</code> e o sistema cria a empresa definindo o campo <code>user_id</code> (dono/admin) para este usuário.
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Associação a Empresa Existente</div>
+                        <p class="rule-desc">
+                            Se selecionado <strong>"Empresa Existente"</strong> (<code>recruiter_existing</code>), o usuário deve selecionar uma empresa da lista. A conta é criada como <code>recruiter</code> e é gerado um registro de vínculo na tabela pivô como <strong>não aprovado</strong> (<code>approved = false</code>).
+                        </p>
+                        <div class="alert-box">
+                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div>
+                                <strong>Importante:</strong> Recrutadores não aprovados não podem criar vagas, visualizar detalhes das empresas às quais se vincularam nem acessar painéis de candidatos.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Gestão de Vagas -->
+            <section id="vagas" class="section-card">
+                <h2>
+                    <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                    Regras de Criação e Status de Vagas
+                </h2>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-title">Status da Vaga</div>
+                        <p class="rule-desc">
+                            Uma vaga pode estar em dois estados principais: <strong>ativa</strong> ou <strong>fechada</strong>. Apenas vagas com o status <code>ativa</code> aparecem na lista de busca de candidatos e permitem novas inscrições.
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Edição e Exclusão</div>
+                        <p class="rule-desc">
+                            Recrutadores autorizados e administradores correspondentes podem editar informações da vaga a qualquer momento. O sistema utiliza <strong>Soft Deletes</strong> na tabela de vagas (<code>jobs</code>), permitindo restaurar ou ocultar os registros sem perder o histórico de candidaturas.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Candidaturas -->
+            <section id="candidaturas" class="section-card">
+                <h2>
+                    <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Regras e Ciclos das Candidaturas (Applications)
+                </h2>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-title">Exclusividade e Perfil</div>
+                        <p class="rule-desc">
+                            Somente usuários com cargo <code>student</code> (Candidato) podem realizar inscrições nas vagas. O sistema bloqueia candidaturas repetidas do mesmo usuário para a mesma vaga no banco de dados.
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Fluxo de Status e Fechamento Automático</div>
+                        <p class="rule-desc">
+                            As candidaturas iniciam com o status <code>pendente</code> e podem transitar para <code>em_analise</code>, <code>reprovado</code> ou <code>aprovado</code>. 
+                            <br><br>
+                            <strong>Regra de Fechamento de Vaga:</strong> No momento exato em que qualquer candidato é definido como <strong>aprovado</strong>, o sistema executa um fluxo automático de fechamento. A vaga correspondente tem seu status atualizado para <code>fechada</code> imediatamente, impedindo novos concorrentes de se inscreverem.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Painel do Master -->
+            <section id="master" class="section-card">
+                <h2>
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Regras Específicas do Super Admin (Master)
+                </h2>
+                <div class="rules-list">
+                    <div class="rule-item">
+                        <div class="rule-title">Exclusividade do Cargo</div>
+                        <p class="rule-desc">
+                            O sistema é configurado sob a regra estrita de que **só pode haver um Master ativo** em toda a plataforma. O Master não pode ser criado de forma convencional através de formulários de registro público. Ele deve ser promovido através de acesso direto ao banco de dados ou alterado por outro usuário que já possua acesso de administração de cargos.
+                        </p>
+                        <div class="alert-box">
+                            <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            <div>
+                                Se o Master atual tentar elevar qualquer outro usuário comum ao papel de <code>master</code>, o sistema interceptará a ação e retornará um erro de validação ("Já existe um usuário MASTER cadastrado no sistema.").
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Vínculos Globais de Recrutamento</div>
+                        <p class="rule-desc">
+                            O Master pode visualizar e associar qualquer usuário recrutador a qualquer empresa disponível no sistema diretamente de sua tela. Este vínculo é gravado na tabela pivô e é automaticamente marcado como aprovado (<code>approved = true</code>).
+                        </p>
+                    </div>
+
+                    <div class="rule-item">
+                        <div class="rule-title">Alteração do Dono (Admin) da Empresa</div>
+                        <p class="rule-desc">
+                            Apenas o Master tem a autoridade de alterar o administrador principal de uma empresa cadastrada. A alteração atualiza o campo <code>user_id</code> da tabela <code>companies</code> para o ID do novo usuário selecionado, transferindo imediatamente todos os direitos de administração para ele.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+</body>
+</html>

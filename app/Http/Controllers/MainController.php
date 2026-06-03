@@ -24,8 +24,14 @@ class MainController extends Controller
     ) {}
 
     public function home() {
-        if (session('user_role') === 'student') {
+        $role = session('user_role');
+
+        if ($role === 'student') {
             return redirect()->route('jobs.index');
+        }
+
+        if ($role === 'master') {
+            return redirect()->route('master.panel');
         }
 
         $id = session('user_id');
@@ -125,7 +131,7 @@ class MainController extends Controller
         $request->validate([
             'nome'             => 'required|string|max:200',
             'email'            => 'required|email:rfc,dns|unique:users,email',
-            'role'             => 'required|in:student,recruiter_existing,recruiter_new,admin',
+            'role'             => 'required|in:student,recruiter_existing,recruiter_new',
             'company_id'       => 'required_if:role,recruiter_existing|nullable|exists:companies,id',
             'company_name'     => 'required_if:role,recruiter_new|nullable|string|max:200',
             'company_cnpj'     => 'required_if:role,recruiter_new|nullable|string|max:25',

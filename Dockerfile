@@ -1,3 +1,12 @@
+# --- Stage 1: Build frontend assets ---
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# --- Stage 2: App container ---
 # Use a imagem base oficial do PHP 8.2 com Apache
 FROM php:8.2-apache
 
@@ -45,6 +54,9 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 # Copiar o restante do código da aplicação
 COPY . .
+
+# Copiar os assets compilados do builder de frontend
+COPY --from=frontend-builder /app/public/build ./public/build
 
 # Gerar o autoloader otimizado e rodar os scripts do Composer
 RUN composer dump-autoload --optimize --no-dev \

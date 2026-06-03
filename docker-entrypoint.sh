@@ -3,6 +3,13 @@ set -e
 
 echo "Starting Docker Entrypoint..."
 
+# Ajustar porta do Apache se a variável PORT estiver definida (necessário para o Render)
+if [ -n "$PORT" ]; then
+    echo "Configurando Apache para escutar na porta $PORT..."
+    sed -i "s/Listen 80/Listen $PORT/g" /etc/apache2/ports.conf
+    sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$PORT>/g" /etc/apache2/sites-available/*.conf
+fi
+
 # Ajustar permissões essenciais do Laravel
 chown -R www-data:www-data /var/www/html/storage
 chown -R www-data:www-data /var/www/html/bootstrap/cache

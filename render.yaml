@@ -20,6 +20,12 @@ services:
         value: "https://syncmatch-web.onrender.com" # Será o domínio gerado pelo render
       - key: LOG_CHANNEL
         value: stderr
+      - key: SESSION_DRIVER
+        value: cookie
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
       
       # Variáveis do Banco de Dados
       - key: DB_CONNECTION

@@ -134,19 +134,13 @@
         <p class="text-muted mt-sm">Junte-se à rede de vagas e recrutamento do SyncMatch</p>
     </div>
 
-    {{-- Erros --}}
+    {{-- Toast de erros --}}
     @if($errors->any())
-        <div class="alert alert-danger mb-lg" id="alert-erros">
-            <i class="fa-solid fa-circle-exclamation"></i>
-            <div>
-                <strong>Corrija os campos abaixo:</strong>
-                <ul style="list-style: none; padding: 0; margin: 4px 0 0;">
-                    @foreach($errors->all() as $error)
-                        <li>• {{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                showToast('error', {{ json_encode($errors->first()) }});
+            });
+        </script>
     @endif
 
     <form method="POST" action="{{ route('salvar_usuario') }}" id="register-form">
@@ -155,7 +149,7 @@
         {{-- ── STEP 1: Tipo de Conta ──────────────────────── --}}
         <div class="section-divider"><span>1 — Tipo de Conta</span></div>
 
-        <div class="role-cards-grid" id="role-cards" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="role-cards-grid" id="role-cards" style="grid-template-columns: repeat(3, 1fr);">
 
             <div class="role-card-option">
                 <input type="radio" name="role" id="role-student" value="student"
@@ -187,15 +181,6 @@
                 </label>
             </div>
 
-            <div class="role-card-option">
-                <input type="radio" name="role" id="role-admin" value="admin"
-                    {{ old('role') === 'admin' ? 'checked' : '' }}>
-                <label class="role-card-label" for="role-admin">
-                    <span class="role-card-icon">⚙️</span>
-                    <span class="role-card-title">Admin</span>
-                    <span class="role-card-desc">Administrador do sistema</span>
-                </label>
-            </div>
         </div>
 
         {{-- ── STEP 2: Dados Pessoais ─────────────────────── --}}
@@ -447,6 +432,42 @@
         updateFormFields();
         updateSocialNameVisibility();
     });
+</script>
+
+{{-- Toast system (standalone, sem layout) --}}
+<div id="toast-container" style="position:fixed;top:1.25rem;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:0.6rem;pointer-events:none;"></div>
+<style>
+    .toast{min-width:280px;max-width:420px;padding:.9rem 1.25rem;border-radius:12px;font-size:.875rem;font-weight:500;display:flex;align-items:flex-start;gap:.75rem;backdrop-filter:blur(16px);box-shadow:0 8px 32px rgba(0,0,0,.35);pointer-events:all;animation:toastIn .35s cubic-bezier(.21,1.02,.73,1) both;position:relative;overflow:hidden;}
+    .toast.toast-success{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.35);}
+    .toast.toast-error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);}
+    .toast-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
+    .toast-body{flex:1;color:var(--clr-text);line-height:1.45;}
+    .toast-body strong{display:block;margin-bottom:2px;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;}
+    .toast-close{background:none;border:none;color:var(--clr-text-dim);cursor:pointer;font-size:.9rem;padding:0;flex-shrink:0;}
+    .toast-progress{position:absolute;bottom:0;left:0;height:3px;border-radius:0 0 12px 12px;animation:toastProgress 4s linear forwards;}
+    .toast-success .toast-progress{background:#10b981;}
+    .toast-error .toast-progress{background:#ef4444;}
+    @keyframes toastIn{from{opacity:0;transform:translateX(60px) scale(.95)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes toastProgress{from{width:100%}to{width:0%}}
+    .toast.toast-out{animation:toastOut .3s ease forwards;}
+    @keyframes toastOut{to{opacity:0;transform:translateX(60px);max-height:0;padding:0;margin:0;}}
+</style>
+<script>
+function showToast(type, message) {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    const icon  = type === 'success' ? '\u2714' : '\u26a0\ufe0f';
+    const label = type === 'success' ? 'Sucesso' : 'Aten\u00e7\u00e3o';
+    toast.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><strong>${label}</strong>${message}</div><button class="toast-close" onclick="dismissToast(this.parentElement)">&times;</button><div class="toast-progress"></div>`;
+    container.appendChild(toast);
+    setTimeout(() => dismissToast(toast), 4000);
+}
+function dismissToast(t) {
+    if (!t || t.classList.contains('toast-out')) return;
+    t.classList.add('toast-out');
+    setTimeout(() => t.remove(), 300);
+}
 </script>
 </body>
 </html>

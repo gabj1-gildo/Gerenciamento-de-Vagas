@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncMatch — Portal de Documentação</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #151e30;
+            --bg-card-hover: #1e293b;
+            --primary: #6366f1;
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --secondary-gradient: linear-gradient(135deg, #10b981 0%, #06b6d4 100%);
+            --accent-gradient: linear-gradient(135deg, #f43f5e 0%, #fb923c 100%);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-clr: rgba(255, 255, 255, 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+        }
+
+        header {
+            padding: 3rem 2rem 1.5rem 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        main {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-clr);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+            height: 380px;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary-gradient);
+            transition: var(--transition);
+        }
+
+        .card.diagrama::before {
+            background: var(--primary-gradient);
+        }
+
+        .card.regras::before {
+            background: var(--secondary-gradient);
+        }
+
+        .card.especificacoes::before {
+            background: var(--accent-gradient);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            background-color: var(--bg-card-hover);
+        }
+
+        .card:hover::before {
+            height: 6px;
+        }
+
+        .card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card.diagrama:hover .card-icon {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .card.regras:hover .card-icon {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .card.especificacoes:hover .card-icon {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: rgba(244, 63, 94, 0.2);
+        }
+
+        .card-icon svg {
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .card.diagrama .card-icon svg { stroke: #818cf8; }
+        .card.regras .card-icon svg { stroke: #34d399; }
+        .card.especificacoes .card-icon svg { stroke: #fb7185; }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.3px;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .card.diagrama .card-footer { color: #818cf8; }
+        .card.regras .card-footer { color: #34d399; }
+        .card.especificacoes .card-footer { color: #fb7185; }
+
+        .card-footer svg {
+            width: 18px;
+            height: 18px;
+            transition: var(--transition);
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+
+        .card:hover .card-footer svg {
+            transform: translateX(6px);
+        }
+
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border-clr);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 2rem 1rem;
+            }
+            .logo {
+                font-size: 2rem;
+            }
+            main {
+                padding: 1rem;
+            }
+            .grid {
+                gap: 1.5rem;
+            }
+            .card {
+                height: auto;
+                min-height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">SyncMatch</div>
+        <p class="subtitle">Documentação Oficial do Sistema de Gerenciamento de Vagas e Match de Candidatos</p>
+    </header>
+
+    <main>
+        <div class="grid">
+            <!-- Card 1: Diagrama e Fluxo -->
+            <a href="diagrama.html" class="card diagrama">
+                <div>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Diagramas & Fluxo</h2>
+                    <p class="card-desc">Diagramas interativos de arquitetura, banco de dados (ERD) e fluxos completos de navegação e jornada dos usuários no sistema.</p>
+                </div>
+                <div class="card-footer">
+                    Visualizar Diagramas
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+            </a>
+
+            <!-- Card 2: Regras de Negócios -->
+            <a href="regras_de_negocio.html" class="card regras">
+                <div>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Regras de Negócio</h2>
+                    <p class="card-desc">Mapeamento completo das regras operacionais, restrições de perfis (Candidato, Recrutador, Admin e Master), vinculações e workflow de vagas.</p>
+                </div>
+                <div class="card-footer">
+                    Ler Regras de Negócio
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+            </a>
+
+            <!-- Card 3: Especificações -->
+            <a href="especificacoes.html" class="card especificacoes">
+                <div>
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Especificações Técnicas</h2>
+                    <p class="card-desc">Modelagem do banco de dados, mapeamento de rotas e middlewares, design patterns aplicados (Factory Method, Strategy, Observer) e stack tecnológica.</p>
+                </div>
+                <div class="card-footer">
+                    Acessar Especificações
+                    <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    <footer>
+        <p>SyncMatch &copy; 2026. Desenvolvido para facilitar o recrutamento e seleção.</p>
+    </footer>
+
+</body>
+</html>
