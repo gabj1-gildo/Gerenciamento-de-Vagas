@@ -9,6 +9,9 @@ class Job extends Model
 {
     use SoftDeletes;
     
+    protected $fillable = ['title', 'description', 'type', 'mode', 'status', 'company_id'];
+
+    
     // opcional, mas recomendado
     public function company()
     {

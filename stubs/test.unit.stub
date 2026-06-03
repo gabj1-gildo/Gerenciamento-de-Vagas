@@ -1,0 +1,36 @@
+<?php
+
+namespace {{ namespace }};
+
+use PHPUnit\Framework\TestCase;
+use Mockery;
+
+class {{ class }} extends TestCase
+{
+    /**
+     * Limpa os mocks após cada teste, prevenindo memory leaks
+     * e comportamentos inesperados em testes subsequentes.
+     */
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    /**
+     * Um exemplo de teste unitário limpo.
+     */
+    public function test_example(): void
+    {
+        // 1. Arrange (Preparação de estado e Mocks)
+        // $dependencyMock = Mockery::mock(Dependency::class);
+        // $dependencyMock->shouldReceive('doSomething')->andReturnTrue();
+
+        // 2. Act (Execução da regra de negócio)
+        // $sut = new SystemUnderTest($dependencyMock);
+        // $result = $sut->execute();
+
+        // 3. Assert (Verificação de estado ou comportamento)
+        $this->assertTrue(true);
+    }
+}

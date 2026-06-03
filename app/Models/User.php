@@ -11,6 +11,9 @@ class User extends Model
         'email',
         'password',
         'role',
+        'birth_date',
+        'gender',
+        'social_name',
         'created_at',
     ];
 
@@ -33,5 +36,10 @@ class User extends Model
     public function recruiterProfile()
     {
         return $this->hasOne(RecruiterProfile::class);
+    }
+
+    public function isMaster()
+    {
+        return $this->role === 'master';
     }
 }

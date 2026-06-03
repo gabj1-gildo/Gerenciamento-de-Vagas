@@ -37,11 +37,14 @@ class UserRegistrationService
 
         // 1. Criar o usuário base
         $user = User::create([
-            'name'       => $data['nome'],
-            'email'      => $data['email'],
-            'password'   => bcrypt($data['senha']),
-            'role'       => $dbRole,
-            'created_at' => now(),
+            'name'        => $data['nome'],
+            'email'       => $data['email'],
+            'password'    => bcrypt($data['senha']),
+            'role'        => $dbRole,
+            'birth_date'  => $data['birth_date'],
+            'gender'      => $data['gender'],
+            'social_name' => $data['gender'] === 'outro' ? ($data['social_name'] ?? null) : null,
+            'created_at'  => now(),
         ]);
 
         // 2. Delegar criação do perfil à Factory (Factory Method)

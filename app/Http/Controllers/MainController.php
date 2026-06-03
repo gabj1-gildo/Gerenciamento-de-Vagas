@@ -41,15 +41,12 @@ class MainController extends Controller
         $id   = session('user_id');
         $role = session('user_role');
 
-        if ($role === 'admin') {
+        if ($role === 'admin' || $role === 'master') {
             $companies = Companie::withCount('jobs')->get()->toArray();
         } else {
             $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
             if ($profile) {
-                $companies = Companie::where('id', $profile->company_id)
-                                    ->withCount('jobs')
-                                    ->get()
-                                    ->toArray();
+                $companies = $profile->companies()->withCount('jobs')->get()->toArray();
             } else {
                 $companies = [];
             }
@@ -84,7 +81,7 @@ class MainController extends Controller
     }
 
     public function companiesCreate() {
-        if (session('user_role') !== 'admin') {
+        if (session('user_role') !== 'admin' && session('user_role') !== 'master') {
             abort(403, 'Apenas administradores podem cadastrar empresas.');
         }
         return view('companies/create');
@@ -97,10 +94,10 @@ class MainController extends Controller
         // Se for admin ou dono da empresa, carregar recrutadores
         $recruiters = [];
         $company    = Companie::find($id);
-        if (session('user_role') === 'admin' || ($company && $company->user_id == session('user_id'))) {
-            $recruiters = \App\Models\RecruiterProfile::where('company_id', $id)
-                                                    ->with('user')
-                                                    ->get();
+        if (session('user_role') === 'admin' || session('user_role') === 'master' || ($company && $company->user_id == session('user_id'))) {
+            if ($company) {
+                $recruiters = $company->recruiters()->with('user')->get();
+            }
         }
 
         return view('companies/show', [
@@ -133,6 +130,9 @@ class MainController extends Controller
             'company_name'     => 'required_if:role,recruiter_new|nullable|string|max:200',
             'company_cnpj'     => 'required_if:role,recruiter_new|nullable|string|max:25',
             'company_city'     => 'required_if:role,recruiter_new|nullable|string|max:100',
+            'birth_date'       => 'required|date|before:today',
+            'gender'           => 'required|in:masculino,feminino,outro',
+            'social_name'      => 'nullable|string|max:200|required_if:gender,outro',
             'senha'            => 'required|string|min:6|confirmed',
         ], [
             'nome.required'          => 'O campo Nome é obrigatório.',
@@ -143,6 +143,12 @@ class MainController extends Controller
             'company_name.required_if' => 'O nome da empresa é obrigatório.',
             'company_cnpj.required_if' => 'O CNPJ da empresa é obrigatório.',
             'company_city.required_if' => 'A cidade da empresa é obrigatória.',
+            'birth_date.required'    => 'A data de nascimento é obrigatória.',
+            'birth_date.date'        => 'Data de nascimento inválida.',
+            'birth_date.before'      => 'A data de nascimento deve ser no passado.',
+            'gender.required'        => 'O sexo é obrigatório.',
+            'gender.in'              => 'Selecione uma opção de sexo válida.',
+            'social_name.required_if'=> 'O nome social é obrigatório quando o sexo é "Outro".',
             'senha.required'         => 'O campo senha é obrigatório.',
             'senha.min'              => 'A senha deve ter no mínimo :min caracteres.',
             'senha.confirmed'        => 'A confirmação de senha não confere.',
@@ -204,7 +210,7 @@ class MainController extends Controller
     }
 
     public function companiesDestroy($id) {
-        if (session('user_role') !== 'admin') {
+        if (session('user_role') !== 'admin' && session('user_role') !== 'master') {
             abort(403, 'Apenas administradores podem excluir empresas.');
         }
 
@@ -216,7 +222,7 @@ class MainController extends Controller
     }
 
     public function companiesStore(Request $request) {
-        if (session('user_role') !== 'admin') {
+        if (session('user_role') !== 'admin' && session('user_role') !== 'master') {
             abort(403, 'Apenas administradores podem cadastrar empresas.');
         }
 
@@ -239,11 +245,15 @@ class MainController extends Controller
 
         if ($role === 'recruiter') {
             $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
-            if (!$profile || !$profile->approved) {
+            if (!$profile) {
                 return redirect()->route('jobs.index')
-                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada pela empresa.']);
+                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada por nenhuma empresa.']);
             }
-            $companies = Companie::where('id', $profile->company_id)->get()->toArray();
+            $companies = $profile->companies()->wherePivot('approved', true)->get()->toArray();
+            if (empty($companies)) {
+                return redirect()->route('jobs.index')
+                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada por nenhuma empresa.']);
+            }
         } else {
             $companies = Companie::all()->toArray();
         }
@@ -257,9 +267,14 @@ class MainController extends Controller
 
         if ($role === 'recruiter') {
             $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
-            if (!$profile || !$profile->approved) {
+            if (!$profile) {
                 return redirect()->route('jobs.index')
-                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada pela empresa.']);
+                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada.']);
+            }
+            $isApproved = $profile->companies()->where('companies.id', $request->input('company_id'))->wherePivot('approved', true)->exists();
+            if (!$isApproved) {
+                return redirect()->route('jobs.index')
+                                 ->withErrors(['error' => 'Sua conta de recrutador ainda não foi aprovada por esta empresa.']);
             }
         }
 
@@ -277,15 +292,16 @@ class MainController extends Controller
         return redirect()->route('jobs.index')->with('success', 'Vaga criada com sucesso!');
     }
 
-    public function approveRecruiter($id) {
+    public function approveRecruiter($id, Request $request) {
         $profile = \App\Models\RecruiterProfile::findOrFail($id);
-        $company = Companie::find($profile->company_id);
+        $companyId = $request->input('company_id');
+        $company = Companie::find($companyId);
 
-        if (session('user_role') !== 'admin' && (!$company || $company->user_id != session('user_id'))) {
+        if (session('user_role') !== 'admin' && session('user_role') !== 'master' && (!$company || $company->user_id != session('user_id'))) {
             abort(403, 'Acesso não autorizado para aprovar este recrutador.');
         }
 
-        $profile->update(['approved' => true]);
+        $profile->companies()->updateExistingPivot($companyId, ['approved' => true]);
 
         return redirect()->back()->with('success', 'Recrutador aprovado com sucesso!');
     }

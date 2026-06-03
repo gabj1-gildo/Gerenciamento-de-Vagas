@@ -1,0 +1,42 @@
+<?php
+
+namespace {{ namespace }};
+
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
+use Mockery;
+
+class {{ class }} extends TestCase
+{
+    /**
+     * Descomente a linha abaixo para recriar o banco de dados em cada teste (Lento, mas seguro).
+     */
+    // use RefreshDatabase;
+
+    /**
+     * Limpa os mocks após cada teste, prevenindo memory leaks
+     * e comportamentos inesperados.
+     */
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    /**
+     * Um exemplo de teste de Feature limpo.
+     */
+    public function test_example(): void
+    {
+        // 1. Arrange
+        // $user = User::factory()->create();
+
+        // 2. Act
+        // $response = $this->actingAs($user)->get('/');
+
+        // 3. Assert
+        $this->assertTrue(true);
+        // $response->assertStatus(200);
+    }
+}

@@ -21,10 +21,9 @@ class RecruiterProfileCreator implements ProfileCreatorInterface
      */
     public function createProfile(User $user, array $data): void
     {
-        RecruiterProfile::create([
+        $profile = RecruiterProfile::create([
             'user_id'    => $user->id,
-            'company_id' => $data['company_id'],
-            'approved'   => false,
         ]);
+        $profile->companies()->attach($data['company_id'], ['approved' => false]);
     }
 }

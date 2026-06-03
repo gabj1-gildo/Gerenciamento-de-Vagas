@@ -176,7 +176,7 @@
             <i class="fa-solid fa-users" style="color: var(--clr-primary-400);"></i>
             Equipe de Recrutadores
         </h2>
-        @php $pendentes = collect($recruiters)->where('approved', false)->count(); @endphp
+        @php $pendentes = collect($recruiters)->filter(function($r) { return !$r->pivot->approved; })->count(); @endphp
         @if($pendentes > 0)
             <span class="badge badge-warning">
                 <i class="fa-solid fa-clock"></i>
@@ -188,7 +188,7 @@
     @if(count($recruiters))
         <div style="display: flex; flex-direction: column; gap: var(--space-sm);">
             @foreach($recruiters as $profile)
-            <div style="background: var(--glass-bg); border: 1px solid {{ $profile->approved ? 'var(--glass-border)' : 'rgba(245,158,11,0.25)' }}; border-radius: var(--radius-lg); padding: var(--space-lg); display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap;">
+            <div style="background: var(--glass-bg); border: 1px solid {{ $profile->pivot->approved ? 'var(--glass-border)' : 'rgba(245,158,11,0.25)' }}; border-radius: var(--radius-lg); padding: var(--space-lg); display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); flex-wrap: wrap;">
                 <div class="flex items-center gap-md">
                     <div class="navbar-user-avatar" style="width: 44px; height: 44px; font-size: 1rem; flex-shrink: 0;">
                         {{ strtoupper(substr($profile->user->name, 0, 1)) }}
@@ -202,7 +202,7 @@
                 </div>
 
                 <div>
-                    @if($profile->approved)
+                    @if($profile->pivot->approved)
                         <span class="badge badge-success" style="padding: 8px 16px; font-size: 0.8rem;">
                             <i class="fa-solid fa-circle-check"></i> Aprovado
                         </span>
@@ -214,6 +214,7 @@
                             @if(session('user_role') === 'admin' || ($company['user_id'] ?? null) == session('user_id'))
                                 <form action="{{ route('recruiters.approve', $profile->id) }}" method="POST" id="form-approve-{{ $profile->id }}" style="display: inline;">
                                     @csrf
+                                    <input type="hidden" name="company_id" value="{{ $company['id'] }}">
                                     <button type="submit" class="btn btn-success btn-sm" id="btn-aprovar-{{ $profile->id }}">
                                         <i class="fa-solid fa-circle-check"></i> Aprovar Acesso
                                     </button>

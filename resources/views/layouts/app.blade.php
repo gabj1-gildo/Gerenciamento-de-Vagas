@@ -26,10 +26,14 @@
 
 {{-- ─── Navbar ───────────────────────────────────────────── --}}
 <nav class="navbar-syncmatch">
-    {{-- Brand --}}
-    <a class="navbar-brand-wrap" href="{{ url('/') }}">
-        <span class="navbar-logo-text">SyncMatch</span>
-        <span class="navbar-logo-badge">Beta</span>
+    <a class="navbar-brand-wrap" href="{{ url('/') }}" style="align-items: flex-start; text-decoration: none;">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 1;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="navbar-logo-text">SyncMatch</span>
+                <span class="navbar-logo-badge">Beta</span>
+            </div>
+            <span style="font-size: 0.55rem; color: var(--clr-text-dim); font-weight: 700; letter-spacing: 0.5px; margin-top: -2px; padding-right: 42px;">by ApexSync</span>
+        </div>
     </a>
 
     {{-- Links de Navegação --}}
@@ -121,7 +125,7 @@
 
 {{-- ─── Footer ─────────────────────────────────────────────── --}}
 <footer class="footer">
-    <p>© {{ date('Y') }} <span>SyncMatch</span> — Conectando talentos às melhores oportunidades.</p>
+    <p>© {{ date('Y') }} <span>SyncMatch</span>, um produto <strong>ApexSync</strong>. Conectando talentos às melhores oportunidades.</p>
 </footer>
 
 @yield('scripts')

@@ -33,10 +33,9 @@ class CompanyOwnerProfileCreator implements ProfileCreatorInterface
         ]);
 
         // 2. Criar perfil de recrutador-dono já aprovado
-        RecruiterProfile::create([
+        $profile = RecruiterProfile::create([
             'user_id'    => $user->id,
-            'company_id' => $company->id,
-            'approved'   => true,
         ]);
+        $profile->companies()->attach($company->id, ['approved' => true]);
     }
 }

@@ -16,10 +16,14 @@ class ApprovedRecruiterAuthorizationStrategy implements AuthorizationStrategyInt
     {
         $profile = RecruiterProfile::where('user_id', $userId)->first();
 
-        if (!$profile || !$profile->approved) {
+        if (!$profile) {
             return false;
         }
 
-        return $profile->company_id == $job->company_id;
+        // Verifica se o recrutador está associado à empresa da vaga e se foi aprovado nela
+        return $profile->companies()
+                       ->where('companies.id', $job->company_id)
+                       ->wherePivot('approved', true)
+                       ->exists();
     }
 }

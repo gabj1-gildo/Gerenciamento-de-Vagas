@@ -116,9 +116,12 @@
 
 {{-- Header simples --}}
 <div style="width: 100%; max-width: 640px; display: flex; justify-content: space-between; align-items: center; padding: 0 0 1.5rem;">
-    <a href="{{ url('/') }}" style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none;">
-        SyncMatch
-    </a>
+    <div style="display: flex; flex-direction: column; align-items: flex-end; line-height: 0.9;">
+        <a href="{{ url('/') }}" style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none;">
+            SyncMatch
+        </a>
+        <span style="font-size: 0.55rem; font-weight: 700; color: var(--clr-text-dim); letter-spacing: 0.5px; margin-top: 2px;">by ApexSync</span>
+    </div>
     <a href="{{ route('login') }}" class="btn btn-secondary btn-sm">
         <i class="fa-solid fa-arrow-right-to-bracket"></i> Já tenho conta
     </a>
@@ -218,6 +221,41 @@
                 </div>
                 @error('email')<div class="error-msg">{{ $message }}</div>@enderror
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="birth_date">Data de Nascimento *</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-calendar input-icon"></i>
+                    <input type="date" class="form-control" id="birth_date" name="birth_date"
+                        value="{{ old('birth_date') }}" required>
+                </div>
+                @error('birth_date')<div class="error-msg">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="gender">Sexo *</label>
+                <select name="gender" id="gender" class="form-select" required>
+                    <option value="">Selecione...</option>
+                    <option value="masculino" {{ old('gender') === 'masculino' ? 'selected' : '' }}>Masculino</option>
+                    <option value="feminino" {{ old('gender') === 'feminino' ? 'selected' : '' }}>Feminino</option>
+                    <option value="outro" {{ old('gender') === 'outro' ? 'selected' : '' }}>Outro</option>
+                </select>
+                @error('gender')<div class="error-msg">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="form-group form-grid-full" id="social-name-section" style="display: none;">
+                <label class="form-label" for="social_name">Nome Social</label>
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-user-tag input-icon"></i>
+                    <input type="text" class="form-control" id="social_name" name="social_name"
+                        placeholder="Como prefere ser chamado" value="{{ old('social_name') }}">
+                </div>
+                @error('social_name')<div class="error-msg">{{ $message }}</div>@enderror
+                <p class="form-hint" style="font-size: 0.75rem; color: var(--clr-text-muted); margin-top: 4px;">
+                    <i class="fa-solid fa-circle-info"></i> Deixe em branco se preferir usar seu nome completo.
+                </p>
+            </div>
+
 
             <div class="form-group">
                 <label class="form-label" for="senha">Senha *</label>
@@ -368,10 +406,23 @@
         }
     }
 
+    function updateSocialNameVisibility() {
+        const genderSelect = document.getElementById('gender');
+        const socialNameSection = document.getElementById('social-name-section');
+        if (genderSelect.value === 'outro') {
+            socialNameSection.style.display = 'block';
+            socialNameSection.style.animation = 'slideDown 0.3s ease';
+        } else {
+            socialNameSection.style.display = 'none';
+        }
+    }
+
     // Listeners nos radio buttons
     document.querySelectorAll('input[name="role"]').forEach(radio => {
         radio.addEventListener('change', updateFormFields);
     });
+
+    document.getElementById('gender').addEventListener('change', updateSocialNameVisibility);
 
     // Toggle senha
     function setupToggle(btnId, inputId, iconId) {
@@ -392,7 +443,10 @@
     setupToggle('toggle-confirm', 'senha_confirmation', 'icon-confirm');
 
     // Executar no load
-    document.addEventListener('DOMContentLoaded', updateFormFields);
+    document.addEventListener('DOMContentLoaded', () => {
+        updateFormFields();
+        updateSocialNameVisibility();
+    });
 </script>
 </body>
 </html>

@@ -70,17 +70,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 7. Criar Perfis dos Recrutadores na Empresa
-        RecruiterProfile::create([
+        $profileApproved = RecruiterProfile::create([
             'user_id' => $recruiterApproved->id,
-            'company_id' => $company->id,
-            'approved' => true // Aprovado
         ]);
+        $profileApproved->companies()->attach($company->id, ['approved' => true]); // Aprovado
 
-        RecruiterProfile::create([
+        $profilePending = RecruiterProfile::create([
             'user_id' => $recruiterPending->id,
-            'company_id' => $company->id,
-            'approved' => false // Aguardando aprovação
         ]);
+        $profilePending->companies()->attach($company->id, ['approved' => false]); // Aguardando aprovação
 
         // 8. Criar Vagas vinculadas à Empresa
         Job::create([

@@ -53,7 +53,7 @@ class AuthController extends Controller
         $approved = true;
         if ($user->role === 'recruiter') {
             $profile = \App\Models\RecruiterProfile::where('user_id', $user->id)->first();
-            $approved = $profile ? $profile->approved : false;
+            $approved = $profile ? $profile->companies()->wherePivot('approved', true)->exists() : false;
         }
 
         session([

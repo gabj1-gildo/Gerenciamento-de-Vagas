@@ -1,0 +1,56 @@
+services:
+  # Web Service Principal (Laravel)
+  - type: web
+    name: syncmatch-web
+    env: docker
+    dockerfilePath: ./Dockerfile
+    region: ohio
+    plan: free # Troque para 'starter' para manter sempre online (sem sleep)
+    healthCheckPath: /
+    envVars:
+      - key: APP_NAME
+        value: "SyncMatch"
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: "https://syncmatch-web.onrender.com" # Será o domínio gerado pelo render
+      - key: LOG_CHANNEL
+        value: stderr
+      
+      # Variáveis do Banco de Dados
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: syncmatch-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: syncmatch-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: syncmatch-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: syncmatch-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: syncmatch-db
+          property: password
+      
+      # Força a execução das migrations ao subir a máquina
+      - key: RUN_MIGRATIONS
+        value: true
+
+databases:
+  # Banco de Dados PostgreSQL Gerenciado
+  - name: syncmatch-db
+    plan: free
+    region: ohio

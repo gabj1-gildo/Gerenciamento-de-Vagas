@@ -25,6 +25,13 @@ class Companie extends Model
 
     public function recruiters()
     {
-        return $this->hasMany(RecruiterProfile::class, 'company_id');
+        return $this->belongsToMany(RecruiterProfile::class, 'companie_recruiter_profile')
+                    ->withPivot('approved')
+                    ->withTimestamps();
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
