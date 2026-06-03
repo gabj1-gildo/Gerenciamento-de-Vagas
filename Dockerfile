@@ -65,7 +65,8 @@ RUN composer dump-autoload --optimize --no-dev \
 
 # Configurar o script de inicialização (Entrypoint)
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Expor a porta 80 do Apache
 EXPOSE 80
