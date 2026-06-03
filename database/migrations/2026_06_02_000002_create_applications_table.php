@@ -23,7 +23,7 @@ return new class extends Migration
                   ->cascadeOnDelete();
                   
             $table->text('cover_letter')->nullable();
-            $table->enum('status', ['recebido', 'em_analise', 'entrevista', 'aprovado', 'rejeitado'])->default('recebido');
+            $table->string('status')->default('recebido'); // 'recebido', 'em_analise', 'entrevista', 'aprovado', 'rejeitado'
             
             $table->timestamps();
             $table->softDeletes();

@@ -21,10 +21,10 @@ return new class extends Migration
 
             $table->string('title'); // título da vaga
             $table->text('description'); // descrição detalhada
-            $table->enum('type', ['estagio', 'clt', 'freela', 'trainee'])->default('estagio');
-            $table->enum('mode', ['presencial', 'hibrido', 'remoto'])->default('presencial');
+            $table->string('type')->default('estagio');
+            $table->string('mode')->default('presencial');
             $table->string('salary_range')->nullable(); // faixa salarial/bolsa
-            $table->enum('status', ['aberta', 'fechada', 'em_analise'])->default('aberta');
+            $table->string('status')->default('aberta');
 
             $table->timestamps();
             $table->softDeletes();

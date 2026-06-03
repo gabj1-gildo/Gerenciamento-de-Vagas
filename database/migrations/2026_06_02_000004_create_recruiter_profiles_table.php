@@ -19,12 +19,6 @@ return new class extends Migration
                   ->constrained('users')
                   ->cascadeOnDelete();
                   
-            $table->foreignId('company_id')
-                  ->constrained('companies')
-                  ->cascadeOnDelete();
-                  
-            $table->boolean('approved')->default(false);
-            
             $table->timestamps();
         });
     }

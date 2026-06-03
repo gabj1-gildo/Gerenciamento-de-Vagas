@@ -18,8 +18,10 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             
-            // Papel do usuário no sistema (opcional)
-            $table->enum('role', ['admin', 'recruiter', 'student'])->default('student');
+            $table->string('role')->default('student'); // 'master', 'admin', 'recruiter', 'student'
+            $table->date('birth_date')->nullable();
+            $table->string('gender')->nullable(); // 'masculino', 'feminino', 'outro'
+            $table->string('social_name')->nullable();
 
             $table->rememberToken();
             $table->timestamps();
