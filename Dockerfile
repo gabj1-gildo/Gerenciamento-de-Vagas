@@ -7,8 +7,8 @@ COPY . .
 RUN npm run build
 
 # --- Stage 2: App container ---
-# Use a imagem base oficial do PHP 8.2 com Apache
-FROM php:8.2-apache
+# Use a imagem base oficial do PHP 8.4 com Apache
+FROM php:8.4-apache
 
 # Argumentos para build seguro e não-interativo
 ENV DEBIAN_FRONTEND=noninteractive
