@@ -19,20 +19,27 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Rodar as migrations automaticamente (apenas se a conexão com banco estiver configurada)
-if [ "$RUN_MIGRATIONS" == "true" ]; then
+# Rodar as migrations automaticamente (executa por padrão, a menos que RUN_MIGRATIONS seja 'false')
+if [ "$RUN_MIGRATIONS" != "false" ]; then
     echo "Aguardando conexão com o banco de dados..."
+    DB_READY=false
     for i in {1..30}; do
         if php artisan db:monitor --quiet; then
             echo "Banco de dados está pronto!"
+            DB_READY=true
             break
         fi
         echo "Banco de dados indisponível, aguardando 2 segundos... ($i/30)"
         sleep 2
     done
 
-    echo "Rodando as migrations do banco de dados..."
-    php artisan migrate --force
+    if [ "$DB_READY" = "true" ]; then
+        echo "Rodando as migrations do banco de dados..."
+        php artisan migrate --force
+    else
+        echo "Erro: Não foi possível conectar ao banco de dados. Abortando migrations."
+        exit 1
+    fi
 fi
 
 echo "Inicializando o servidor web (Apache)..."
