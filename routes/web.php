@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Auth;
 Route::middleware([CheckSession::class])->group(function(){
     Route::get('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/loginSubmit', [AuthController::class, 'loginSubmit'])->name('loginSubmit');
+
+    // Recuperação de Senha
+    Route::get('/forgot-password', [\App\Http\Controllers\ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [\App\Http\Controllers\ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/reset-password/{token}', [\App\Http\Controllers\ForgotPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [\App\Http\Controllers\ForgotPasswordController::class, 'reset'])->name('password.update');
 });
 
 Route::middleware([CheckLogin::class])->group(function () {
@@ -42,6 +48,7 @@ Route::middleware([CheckLogin::class])->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/jobs/{jobId}/apply', [ApplicationController::class, 'store'])->name('applications.store');
     Route::get('/my-applications', [ApplicationController::class, 'candidateApplications'])->name('candidate.applications');
+    Route::delete('/applications/{id}/cancel', [ApplicationController::class, 'cancel'])->name('applications.cancel');
 
     // Recrutadores (Empresas)
     Route::get('/jobs/{jobId}/applicants', [ApplicationController::class, 'jobApplications'])->name('job.applications');
@@ -60,3 +67,11 @@ Route::middleware([CheckLogin::class, CheckMaster::class])->prefix('master')->na
 
 Route::get('/novo_usuario', [MainController::class, 'novoUsuario'])->name('novo_usuario');
 Route::post('/salvar_usuario', [MainController::class, 'salvarUsuario'])->name('salvar_usuario');
+
+// ─── Rotas de Verificação de E-mail ────────────────────────────────────────
+Route::get('/verificar-email', [AuthController::class, 'verifyEmail'])->name('verification.verify');
+
+Route::middleware([CheckLogin::class])->group(function () {
+    Route::get('/email/verify', [AuthController::class, 'verificationNotice'])->name('verification.notice');
+    Route::post('/email/resend', [AuthController::class, 'resendVerification'])->name('verification.resend');
+});

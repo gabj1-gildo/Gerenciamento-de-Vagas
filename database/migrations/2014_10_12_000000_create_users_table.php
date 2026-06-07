@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('birth_date')->nullable();
             $table->string('gender')->nullable(); // 'masculino', 'feminino', 'outro'
             $table->string('social_name')->nullable();
+            $table->string('verification_token')->nullable();
 
             $table->rememberToken();
             $table->timestamps();

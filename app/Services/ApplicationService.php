@@ -8,6 +8,9 @@ use App\Models\Job;
 use App\Patterns\Strategy\AdminAuthorizationStrategy;
 use App\Patterns\Strategy\ApprovedRecruiterAuthorizationStrategy;
 use App\Patterns\Strategy\CompanyOwnerAuthorizationStrategy;
+use App\Patterns\State\ApplicationStateFactory;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ApplicationStatusChangedMail;
 
 /**
  * Service Layer — Padrão Facade.
@@ -57,11 +60,13 @@ class ApplicationService
      */
     public function updateStatus(Application $application, string $newStatus): void
     {
-        $application->update(['status' => $newStatus]);
+        // State Pattern: Instancia o estado correto e executa a transição
+        $state = ApplicationStateFactory::make($newStatus);
+        $state->handle($application);
 
-        // Observer: dispara evento para que os Listeners reajam de forma desacoplada
-        if ($newStatus === 'aprovado') {
-            ApplicationApproved::dispatch($application);
+        // Envia o e-mail notificando o candidato
+        if ($application->user && $application->user->email) {
+            Mail::to($application->user->email)->send(new ApplicationStatusChangedMail($application));
         }
     }
 }

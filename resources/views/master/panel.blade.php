@@ -481,6 +481,9 @@
                 @endforelse
             </tbody>
         </table>
+        <div style="padding: 1rem;">
+            {{ $users->appends(request()->query())->links() }}
+        </div>
     </div>
 </div>
 

@@ -19,6 +19,16 @@ class CheckLogin
         if(!session('user_id')){
             return redirect('/login');
         }
+
+        // Se o usuário estiver logado mas o e-mail não estiver verificado, redireciona para a tela de aviso
+        $user = \App\Models\User::find(session('user_id'));
+        if ($user && !$user->email_verified_at) {
+            // Evitar loop de redirecionamento para as próprias rotas de verificação e logout
+            if (!$request->is('email/verify') && !$request->is('email/resend') && !$request->is('logout')) {
+                return redirect()->route('verification.notice');
+            }
+        }
+
         return $next($request);
     }
 }

@@ -5,9 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        private readonly \App\Services\Notification\NotificationStrategy $notificationStrategy
+    ) {}
+
     public function login(){
         return view('login');
     }
@@ -71,5 +76,52 @@ class AuthController extends Controller
         // Destruir sessão de usuário
         session()->forget(['user_id', 'user_nome', 'user_role', 'user_approved']);
         return redirect('/login');
+    }
+
+    public function verifyEmail(Request $request) {
+        $token = $request->query('token');
+        if (!$token) {
+            return redirect()->route('login')->withErrors(['loginError' => 'Token de verificação inválido.']);
+        }
+
+        $user = User::where('verification_token', $token)->first();
+        if (!$user) {
+            return redirect()->route('login')->withErrors(['loginError' => 'O link de verificação é inválido ou expirou.']);
+        }
+
+        $user->email_verified_at = now();
+        $user->verification_token = null;
+        $user->save();
+
+        return redirect()->route('login')->with('success', 'Seu e-mail foi verificado com sucesso! Faça login para continuar.');
+    }
+
+    public function verificationNotice() {
+        $user = User::find(session('user_id'));
+        if (!$user) {
+            return redirect('/login');
+        }
+        if ($user->email_verified_at) {
+            return redirect('/');
+        }
+        return view('auth.verify-email', compact('user'));
+    }
+
+    public function resendVerification(Request $request) {
+        $user = User::find(session('user_id'));
+        if (!$user) {
+            return redirect('/login');
+        }
+        if ($user->email_verified_at) {
+            return redirect('/');
+        }
+
+        $token = Str::random(64);
+        $user->verification_token = $token;
+        $user->save();
+
+        $this->notificationStrategy->sendVerificationLink($user, $token);
+
+        return redirect()->back()->with('success', 'Um novo link de verificação foi enviado para o seu e-mail.');
     }
 }

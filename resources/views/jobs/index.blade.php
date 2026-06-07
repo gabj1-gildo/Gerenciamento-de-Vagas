@@ -121,8 +121,12 @@
 
     <p class="text-center text-muted mt-xl text-sm">
         <i class="fa-solid fa-list-check"></i>
-        Mostrando <strong>{{ count($jobs) }}</strong> {{ count($jobs) === 1 ? 'vaga' : 'vagas' }}
+        Mostrando <strong>{{ $jobs->count() }}</strong> de <strong>{{ $jobs->total() }}</strong> {{ $jobs->total() === 1 ? 'vaga' : 'vagas' }}
     </p>
+
+    <div class="mt-md" style="display:flex; justify-content:center;">
+        {{ $jobs->appends(request()->query())->links() }}
+    </div>
 
 @else
     <div class="empty-state animate-fadeInUp">

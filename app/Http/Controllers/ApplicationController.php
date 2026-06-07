@@ -114,4 +114,17 @@ class ApplicationController extends Controller
 
         return redirect()->back()->with('success', $message);
     }
+
+    public function cancel($id)
+    {
+        $userId = session('user_id');
+        $application = Application::where('id', $id)->where('user_id', $userId)->firstOrFail();
+
+        if (in_array($application->status, ['aprovado', 'rejeitado'])) {
+            return redirect()->back()->withErrors(['error' => 'Não é possível cancelar uma candidatura já finalizada.']);
+        }
+
+        $application->delete();
+        return redirect()->back()->with('success', 'Candidatura cancelada com sucesso.');
+    }
 }

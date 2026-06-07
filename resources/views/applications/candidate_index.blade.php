@@ -124,6 +124,18 @@
                 </details>
             </div>
             @endif
+
+            @if(!in_array($status, ['aprovado', 'rejeitado']))
+            <div style="border-top: 1px solid var(--glass-border); padding: 1rem 1.5rem; display: flex; justify-content: flex-end;">
+                <form action="{{ route('applications.cancel', $application->id) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja desistir desta vaga?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--clr-danger); border-color: var(--clr-danger);">
+                        <i class="fa-solid fa-trash"></i> Desistir da Vaga
+                    </button>
+                </form>
+            </div>
+            @endif
         </div>
         @endforeach
     </div>

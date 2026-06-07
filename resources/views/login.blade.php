@@ -243,7 +243,10 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="senha">Senha</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label class="form-label" for="senha" style="margin-bottom: 0;">Senha</label>
+                    <a href="{{ route('password.request') }}" style="font-size: 0.75rem; color: var(--clr-primary-400); text-decoration: none; font-weight: 600;">Esqueceu a senha?</a>
+                </div>
                 <div class="input-wrapper">
                     <i class="fa-solid fa-lock input-icon"></i>
                     <input

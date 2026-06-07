@@ -36,7 +36,7 @@ class MasterController extends Controller
             $query->where('role', $request->input('role'));
         }
 
-        $users            = $query->orderBy('created_at', 'desc')->get();
+        $users            = $query->orderBy('created_at', 'desc')->paginate(15);
         $companies        = Companie::with('admin')->orderBy('name')->get();
         $recruiterProfiles = RecruiterProfile::with(['user', 'companies'])->get();
 

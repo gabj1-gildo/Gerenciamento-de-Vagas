@@ -78,6 +78,9 @@
         </div>
         @endforeach
     </div>
+    <div class="mt-md" style="display:flex; justify-content:center;">
+        {{ $companies->appends(request()->query())->links() }}
+    </div>
 @else
     <div class="empty-state animate-fadeInUp">
         <div class="empty-state-icon">🏢</div>

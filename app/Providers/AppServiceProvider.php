@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\URL;
 // Padrão Observer: imports do evento e seu listener
 use App\Events\ApplicationApproved;
 use App\Listeners\CloseJobOnApplicationApproval;
+use App\Services\Notification\NotificationStrategy;
+use App\Services\Notification\LaravelMailStrategy;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,7 +19,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(NotificationStrategy::class, LaravelMailStrategy::class);
     }
 
     /**

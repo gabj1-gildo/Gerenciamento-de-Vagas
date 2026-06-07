@@ -7,6 +7,7 @@ use App\Models\Job;
 use App\Models\Companie;
 use App\Models\User;
 use App\Services\UserRegistrationService;
+use App\Repositories\JobRepository;
 
 /**
  * MainController — Controlador principal do SyncMatch.
@@ -20,7 +21,8 @@ use App\Services\UserRegistrationService;
 class MainController extends Controller
 {
     public function __construct(
-        private readonly UserRegistrationService $registrationService
+        private readonly UserRegistrationService $registrationService,
+        private readonly JobRepository $jobRepository
     ) {}
 
     public function home() {
@@ -37,8 +39,7 @@ class MainController extends Controller
         $id = session('user_id');
         $companies = Companie::where('user_id', $id)
                             ->withCount('jobs')
-                            ->get()
-                            ->toArray();
+                            ->paginate(10);
 
         return view('companies/index', ['companies' => $companies]);
     }
@@ -48,41 +49,26 @@ class MainController extends Controller
         $role = session('user_role');
 
         if ($role === 'admin' || $role === 'master') {
-            $companies = Companie::withCount('jobs')->get()->toArray();
+            $companies = Companie::withCount('jobs')->paginate(10);
         } else {
             $profile = \App\Models\RecruiterProfile::where('user_id', $id)->first();
             if ($profile) {
-                $companies = $profile->companies()->withCount('jobs')->get()->toArray();
+                $companies = $profile->companies()->withCount('jobs')->paginate(10);
             } else {
-                $companies = [];
+                // Paginação vazia caso não haja perfil
+                $companies = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
             }
         }
         return view('companies/index', ['companies' => $companies]);
     }
 
     public function jobsIndex(Request $request) {
-        $query = Job::with('company');
+        $search = $request->input('search');
+        $type = $request->input('type');
+        $mode = $request->input('mode');
 
-        if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%')
-                  ->orWhereHas('company', function($compQuery) use ($search) {
-                      $compQuery->where('name', 'like', '%' . $search . '%');
-                  });
-            });
-        }
+        $jobs = $this->jobRepository->searchJobs($search, $type, $mode, 10);
 
-        if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
-        }
-
-        if ($request->filled('mode')) {
-            $query->where('mode', $request->input('mode'));
-        }
-
-        $jobs = $query->get()->toArray();
         return view('jobs/index', ['jobs' => $jobs]);
     }
 
@@ -95,7 +81,7 @@ class MainController extends Controller
 
     public function companiesShow($id) {
         $companies = Companie::where('id', $id)->get()->toArray();
-        $jobs      = Job::where('company_id', $id)->with('company')->get()->toArray();
+        $jobs      = $this->jobRepository->getJobsByCompanyId($id, 10);
 
         // Se for admin ou dono da empresa, carregar recrutadores
         $recruiters = [];
@@ -114,8 +100,9 @@ class MainController extends Controller
     }
 
     public function jobsShow($id) {
-        $job = Job::with('company')->findOrFail($id)->toArray();
-        return view('jobs/show', ['job' => $job]);
+        $job = $this->jobRepository->findByIdWithCompany($id);
+        if (!$job) abort(404);
+        return view('jobs/show', ['job' => $job->toArray()]);
     }
 
     public function novoUsuario() {

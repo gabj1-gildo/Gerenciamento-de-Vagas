@@ -14,6 +14,8 @@ class User extends Model
         'birth_date',
         'gender',
         'social_name',
+        'verification_token',
+        'email_verified_at',
         'created_at',
     ];
 
