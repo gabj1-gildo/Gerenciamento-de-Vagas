@@ -35,7 +35,7 @@ if [ "$RUN_MIGRATIONS" != "false" ]; then
 
     if [ "$DB_READY" = "true" ]; then
         echo "Rodando as migrations do banco de dados..."
-        php artisan migrate:fresh --force
+        php artisan migrate --force
     else
         echo "Erro: Não foi possível conectar ao banco de dados. Abortando migrations."
         exit 1
