@@ -148,10 +148,22 @@ class MainController extends Controller
         ]);
 
         // Delega ao Service que usa Factory Method para criar o perfil correto
-        $this->registrationService->register($request->all());
+        $user = $this->registrationService->register($request->all());
 
-        return redirect()->route('login')
-                         ->with('success', 'Cadastro realizado com sucesso! Faça login para continuar.');
+        $approved = true;
+        if ($user->role === 'recruiter') {
+            $profile = \App\Models\RecruiterProfile::where('user_id', $user->id)->first();
+            $approved = $profile ? $profile->companies()->wherePivot('approved', true)->exists() : false;
+        }
+
+        session([
+            'user_id' => $user->id, 
+            'user_nome' => $user->name, 
+            'user_role' => $user->role,
+            'user_approved' => $approved
+        ]);
+
+        return redirect()->route('home');
     }
 
     public function companiesEdit($id) {

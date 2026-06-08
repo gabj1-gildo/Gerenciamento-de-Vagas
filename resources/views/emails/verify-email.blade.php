@@ -54,14 +54,14 @@
         }
         .btn {
             display: inline-block;
-            background: linear-gradient(135deg, #f43f5e, #be123c);
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: #ffffff !important;
             text-decoration: none;
             padding: 14px 30px;
             font-size: 16px;
             font-weight: 600;
             border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(244, 63, 94, 0.35);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
             transition: all 0.3s ease;
         }
         .footer {
