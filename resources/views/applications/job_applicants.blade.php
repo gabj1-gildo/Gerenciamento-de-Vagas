@@ -99,7 +99,7 @@ $stages = [
                 {{-- Ações --}}
                 <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px; margin-top: 4px;">
                     @if($app->user->candidateProfile?->resume_path)
-                        <a href="{{ asset('storage/' . $app->user->candidateProfile->resume_path) }}"
+                        <a href="{{ Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($app->user->candidateProfile->resume_path) }}"
                            target="_blank" class="btn btn-secondary btn-sm"
                            id="btn-curriculo-{{ $app->id }}"
                            style="font-size: 0.7rem; padding: 4px 8px;">
