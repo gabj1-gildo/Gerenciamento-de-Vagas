@@ -212,10 +212,10 @@ function dismissToast(t) {
 
         {{-- Dispara toasts via session --}}
         @if(session('success'))
-            <script>showToast('success', {{ json_encode(session('success')) }});</script>
+            <script>showToast('success', {!! json_encode(session('success')) !!});</script>
         @endif
         @if($errors->any())
-            <script>showToast('error', {{ json_encode($errors->first()) }});</script>
+            <script>showToast('error', {!! json_encode($errors->first()) !!});</script>
         @endif
 
         @yield('content')

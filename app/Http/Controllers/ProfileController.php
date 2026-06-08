@@ -20,7 +20,7 @@ class ProfileController extends Controller
     {
         $userId = session('user_id');
         $request->validate([
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'required|string|max:20',
             'bio' => 'nullable|string',
             'skills' => 'nullable|string',
             'education' => 'nullable|string',
@@ -33,11 +33,13 @@ class ProfileController extends Controller
         $data = $request->only(['phone', 'bio', 'skills', 'education', 'experience']);
 
         if ($request->hasFile('resume')) {
+            $disk = env('FILESYSTEM_DISK', 'public');
+            
             // Delete old resume if exists
-            if ($profile->resume_path && Storage::disk('public')->exists($profile->resume_path)) {
-                Storage::disk('public')->delete($profile->resume_path);
+            if ($profile->resume_path && Storage::disk($disk)->exists($profile->resume_path)) {
+                Storage::disk($disk)->delete($profile->resume_path);
             }
-            $path = $request->file('resume')->store('resumes', 'public');
+            $path = $request->file('resume')->store('resumes', $disk);
             $data['resume_path'] = $path;
         }
 

@@ -13,13 +13,13 @@
     </div>
 
     {{-- Status do Currículo --}}
-    @if($profile->resume_path)
+    @if($profile->resume_path && !empty($profile->phone))
         <div class="alert alert-success animate-fadeInUp mb-xl">
             <i class="fa-solid fa-circle-check"></i>
             <div>
-                <strong>Currículo PDF cadastrado!</strong> Você está pronto para se candidatar.
+                <strong>Perfil Completo!</strong> Você está pronto para se candidatar.
                 <div class="mt-sm">
-                    <a href="{{ asset('storage/' . $profile->resume_path) }}" target="_blank" class="btn btn-success btn-sm" id="btn-ver-curriculo">
+                    <a href="{{ Storage::disk(env('FILESYSTEM_DISK', 'public'))->url($profile->resume_path) }}" target="_blank" class="btn btn-success btn-sm" id="btn-ver-curriculo">
                         <i class="fa-solid fa-file-pdf"></i> Visualizar PDF
                     </a>
                 </div>
@@ -29,7 +29,7 @@
         <div class="alert alert-warning animate-fadeInUp mb-xl">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <div>
-                <strong>Currículo pendente</strong> — Faça upload do seu PDF para se candidatar às vagas.
+                <strong>Perfil pendente</strong> — Preencha seu telefone de contato e faça upload do seu PDF para se candidatar às vagas.
             </div>
         </div>
     @endif
@@ -42,10 +42,10 @@
                 {{-- Contato --}}
                 <div class="form-group">
                     <label class="form-label" for="phone">
-                        <i class="fa-solid fa-phone"></i> Telefone de Contato
+                        <i class="fa-solid fa-phone"></i> Telefone de Contato *
                     </label>
                     <input type="text" name="phone" id="phone" class="form-control"
-                        placeholder="(XX) XXXXX-XXXX" value="{{ old('phone', $profile->phone) }}">
+                        placeholder="(XX) XXXXX-XXXX" value="{{ old('phone', $profile->phone) }}" required>
                 </div>
 
                 {{-- Bio --}}

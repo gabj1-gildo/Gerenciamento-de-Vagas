@@ -31,9 +31,9 @@ class ApplicationController extends Controller
 
         // Verifica se candidato tem currículo cadastrado
         $profile = CandidateProfile::where('user_id', $userId)->first();
-        if (!$profile || !$profile->resume_path) {
+        if (!$profile || !$profile->resume_path || empty($profile->phone)) {
             return redirect()->back()
-                             ->withErrors(['error' => 'Você precisa cadastrar seu currículo (PDF) em seu perfil antes de se candidatar.']);
+                             ->withErrors(['error' => 'Você precisa preencher seu telefone de contato e cadastrar seu currículo (PDF) em seu perfil antes de se candidatar.']);
         }
 
         $job = Job::findOrFail($jobId);

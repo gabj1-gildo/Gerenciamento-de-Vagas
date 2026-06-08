@@ -138,7 +138,7 @@
     @if($errors->any())
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                showToast('error', {{ json_encode($errors->first()) }});
+                showToast('error', {!! json_encode($errors->first()) !!});
             });
         </script>
     @endif
