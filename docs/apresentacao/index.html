@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Padrões GoF - SyncMatch Dark Mode</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/night-owl.min.css">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        display: ['Syne', 'sans-serif'],
+                        mono: ['IBM Plex Mono', 'monospace'],
+                    },
+                    colors: {
+                        dark: {
+                            base: '#050505',
+                            surface: '#0f0f13',
+                            panel: '#16161c',
+                            border: '#2a2a35'
+                        },
+                        neon: {
+                            cyan: '#00f0ff',
+                            purple: '#bd00ff',
+                            pink: '#ff0055',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --r-background-color: transparent;
+            --r-main-font: 'Outfit', sans-serif;
+            --r-main-color: #e2e8f0;
+            --r-heading-font: 'Syne', sans-serif;
+            --r-heading-color: #ffffff;
+            --r-heading-font-weight: 800;
+            --r-link-color: #00f0ff;
+            --r-link-color-hover: #ff0055;
+            --r-selection-background-color: rgba(189, 0, 255, 0.4);
+        }
+
+        body, html {
+            background-color: #050505 !important;
+            color: #e2e8f0;
+            overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-attachment: fixed;
+        }
+
+        .reveal, .reveal-viewport, .reveal .slides {
+            background: transparent !important;
+            background-color: transparent !important;
+        }
+
+        .ambient-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 100vw; height: 100vh;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle at 20% 50%, rgba(0,240,255,0.03) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 50%, rgba(189,0,255,0.03) 0%, transparent 40%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .reveal h1, .reveal h2, .reveal h3 { text-transform: none; margin-bottom: 1rem; }
+        .reveal p { line-height: 1.6; margin-bottom: 1.5rem; font-size: 1.2rem; }
+
+        .dark-card {
+            background: #0f0f13;
+            border: 1px solid var(--neon-border-color, #2a2a35);
+            border-radius: 1.2rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .border-glow-cyan {
+            --neon-border-color: rgba(0, 240, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.15), inset 0 0 10px rgba(0, 240, 255, 0.05);
+        }
+        .border-glow-purple {
+            --neon-border-color: rgba(189, 0, 255, 0.5);
+            box-shadow: 0 0 15px rgba(189, 0, 255, 0.15), inset 0 0 10px rgba(189, 0, 255, 0.05);
+        }
+        .border-glow-pink {
+            --neon-border-color: rgba(255, 0, 85, 0.5);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.15), inset 0 0 10px rgba(255, 0, 85, 0.05);
+        }
+
+        .dark-card:hover { transform: translateY(-5px) scale(1.01); background: #16161c; }
+        
+        .border-glow-cyan:hover { box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.1); border-color: #00f0ff; }
+        .border-glow-purple:hover { box-shadow: 0 0 25px rgba(189, 0, 255, 0.4), inset 0 0 15px rgba(189, 0, 255, 0.1); border-color: #bd00ff; }
+        .border-glow-pink:hover { box-shadow: 0 0 25px rgba(255, 0, 85, 0.4), inset 0 0 15px rgba(255, 0, 85, 0.1); border-color: #ff0055; }
+
+        .text-neon-cyan { color: #00f0ff; text-shadow: 0 0 10px rgba(0,240,255,0.5); }
+        .text-neon-purple { color: #bd00ff; text-shadow: 0 0 10px rgba(189,0,255,0.5); }
+        .text-neon-pink { color: #ff0055; text-shadow: 0 0 10px rgba(255,0,85,0.5); }
+
+        .mac-window {
+            position: relative;
+            background: #011627;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #2a2a35;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.8);
+            width: 100%;
+            text-align: left;
+        }
+        .mac-window.neon-border {
+            border-color: rgba(0, 240, 255, 0.6);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2), 0 20px 40px -10px rgba(0,0,0,0.8);
+        }
+        .mac-header { background: #0d0d12; padding: 10px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #2a2a35; }
+        .mac-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .mac-dot.red { background: #ff5f56; } .mac-dot.yellow { background: #ffbd2e; } .mac-dot.green { background: #27c93f; }
+        .mac-title { flex: 1; text-align: center; color: #a1a1aa; font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem; font-weight: 500; }
+
+        .reveal pre { margin: 0; box-shadow: none; width: 100%; position: relative; }
+        .reveal pre code { padding: 1.5rem; font-family: 'IBM Plex Mono', monospace; font-size: 1.1rem; line-height: 1.6; background: #011627 !important; }
+        
+        /* Fix for RevealHighlight absolute positioning bug */
+        .reveal .code-wrapper {
+            position: relative !important;
+            width: 100%;
+        }
+
+        /* Circuit Board Fix - SVG goes exactly from center of first node to center of last node */
+        .circuit-container { position: relative; width: 100%; height: 300px; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; margin-top: 4rem; }
+        .circuit-svg-container { position: absolute; top: 50%; left: calc(2rem + 40px); right: calc(2rem + 40px); transform: translateY(-50%); height: 100px; z-index: 0; }
+        .circuit-svg { width: 100%; height: 100%; overflow: visible; }
+        
+        .circuit-path { fill: none; stroke: #1a1a24; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; } 
+        .circuit-glow { fill: none; stroke: #00f0ff; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 10px #00f0ff); stroke-dasharray: 100; stroke-dashoffset: 100; transition: stroke-dashoffset 1s ease-in-out; }
+        
+        .circuit-node { 
+            width: 80px; height: 80px; border-radius: 12px; background: #0f0f13; 
+            border: 2px solid #2a2a35; display: flex; align-items: center; justify-content: center; 
+            z-index: 2; position: relative; color: #52525b; font-size: 1.8rem; transform: rotate(45deg); transition: all 0.5s; 
+        }
+        .circuit-node i { transform: rotate(-45deg); }
+        .circuit-node.active { border-color: #00f0ff; color: #00f0ff; box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 10px rgba(0, 240, 255, 0.2); transform: rotate(45deg) scale(1.1); background: #050505; }
+        .circuit-node.done { border-color: #bd00ff; color: #bd00ff; box-shadow: 0 0 15px rgba(189, 0, 255, 0.3); background: #050505; }
+        
+        .node-info { position: absolute; transform: rotate(-45deg); text-align: center; width: 220px; opacity: 0; transition: 0.3s; pointer-events: none; }
+        .node-info.top { bottom: 85px; } .node-info.bottom { top: 85px; }
+        .circuit-node.active .node-info { opacity: 1; }
+        
+        .node-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.1rem; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+        .node-desc { font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; color: #94a3b8; font-weight: 500; margin-top: 4px; }
+
+        .reveal section { height: 100%; }
+        
+        .badge-neon { @apply inline-flex items-center px-4 py-1.5 rounded-md text-xs font-bold uppercase tracking-widest bg-dark-panel border; }
+        .badge-cyan { @apply badge-neon text-neon-cyan border-neon-cyan/50 shadow-[0_0_10px_rgba(0,240,255,0.2)]; }
+        .badge-purple { @apply badge-neon text-neon-purple border-neon-purple/50 shadow-[0_0_10px_rgba(189,0,255,0.2)]; }
+        .badge-pink { @apply badge-neon text-neon-pink border-neon-pink/50 shadow-[0_0_10px_rgba(255,0,85,0.2)]; }
+        
+        .code-container-relative { position: relative; width: 100%; height: 380px; }
+        .code-layer { position: absolute; top: 0; left: 0; width: 100%; transition: opacity 0.5s ease, transform 0.5s ease; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="ambient-glow"></div>
+
+    <div class="reveal">
+        <div class="slides">
+            
+            <section class="h-full w-full grid grid-rows-[auto_1fr_auto] px-12 pt-6 pb-20 box-border">
+                
+                <!-- Top: Disciplina -->
+                <div class="w-full text-center">
+                    <span class="text-neon-cyan font-mono text-base tracking-[0.2em] font-bold uppercase drop-shadow-md border border-neon-cyan/30 px-8 py-2.5 rounded-full bg-dark-panel/40 backdrop-blur-sm inline-block">
+                        Padrões e Práticas de Desenvolvimento de Softwares
+                    </span>
+                </div>
+                
+                <!-- Center: Logo & Title -->
+                <div class="w-full h-full flex flex-col items-center justify-center">
+                    <div class="mb-6 relative">
+                        <div class="absolute inset-0 bg-neon-cyan opacity-20 blur-2xl rounded-full"></div>
+                        <img src="logo.png" alt="SyncMatch Logo" class="w-36 h-36 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,240,255,0.4)] hover:scale-105 transition-transform duration-500">
+                    </div>
+                    
+                    <h1 class="font-display font-black text-[7rem] leading-none mb-4 text-white tracking-tighter drop-shadow-2xl">
+                        SyncMatch
+                    </h1>
+                    
+                    <div class="w-16 h-[2px] bg-gradient-to-r from-neon-purple via-neon-cyan to-neon-pink mx-auto mb-6"></div>
+                    
+                    <h2 class="font-sans text-xl text-slate-400 font-light tracking-[0.4em] uppercase">
+                        Arquitetura & Padrões GoF
+                    </h2>
+                </div>
+                
+                <!-- Bottom: Team -->
+                <div class="w-full text-center">
+                    <div class="inline-flex items-center justify-center gap-16 text-slate-300 font-mono text-lg uppercase tracking-wider">
+                        <div class="flex items-center gap-3 drop-shadow-xl">
+                            <i class="fa-solid fa-code-branch text-neon-cyan opacity-70"></i>
+                            <span class="text-white font-bold">Gildo Alves</span>
+                        </div>
+                        <div class="flex items-center gap-3 drop-shadow-xl">
+                            <i class="fa-solid fa-code-branch text-neon-purple opacity-70"></i>
+                            <span class="text-white font-bold">Ádria Rafaela</span>
+                        </div>
+                        <div class="flex items-center gap-3 drop-shadow-xl">
+                            <i class="fa-solid fa-code-branch text-neon-pink opacity-70"></i>
+                            <span class="text-white font-bold">Lorrany Alves</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- O PROBLEMA - Layout Centered Code -->
+            <section class="h-full flex flex-col justify-center pt-8">
+                <div class="text-center mb-8">
+                    <span class="badge-purple mb-4">O Cenário Antigo</span>
+                    <h2 class="font-display text-5xl font-bold text-white">O Caos Antes da Ordem</h2>
+                    <p class="text-slate-300 text-xl">O preço cobrado pela ausência de design estrutural.</p>
+                </div>
+                
+                <div class="grid grid-cols-12 gap-8 items-center max-w-7xl mx-auto w-full">
+                    <div class="col-span-7">
+                        <div class="mac-window border-[#ef4444] shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                            <div class="mac-header">
+                                <div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div>
+                                <div class="mac-title text-red-400">ApplicationController.php</div>
+                            </div>
+                            <pre><code class="language-php" data-trim data-line-numbers="1-12|3-8|9-11">
+public function salvarCandidatura(Request $request) {
+    // 🍝 Spaghetti Code 
+    if ($request->user()->tipo == 'estudante') {
+        // Validação complexa aninhada...
+        // Múltiplos IFs...
+    } elseif ($request->user()->tipo == 'empresa') {
+        // Outra lógica completamente diferente...
+    }
+    
+    // Regra de negócio injetada no controlador da web!
+    if ($status == 'aprovado') {
+        Mail::to($user)->send(new NotificacaoAprovacao()); 
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+                    <div class="col-span-5 flex flex-col gap-5">
+                        <div class="dark-card border-glow-pink p-6 flex items-center gap-5 fragment fade-left">
+                            <div class="p-3 rounded-lg bg-dark-panel border border-neon-pink text-neon-pink"><i class="fa-solid fa-link-slash fa-xl"></i></div>
+                            <div><h4 class="font-bold text-white text-xl m-0">Alto Acoplamento</h4><p class="text-sm text-slate-400 m-0 mt-1 leading-tight">Controladores agindo como domínio.</p></div>
+                        </div>
+                        <div class="dark-card border-glow-purple p-6 flex items-center gap-5 fragment fade-left">
+                            <div class="p-3 rounded-lg bg-dark-panel border border-neon-purple text-neon-purple"><i class="fa-solid fa-clone fa-xl"></i></div>
+                            <div><h4 class="font-bold text-white text-xl m-0">Duplicação Violenta</h4><p class="text-sm text-slate-400 m-0 mt-1 leading-tight">Lógicas repetidas pelo sistema.</p></div>
+                        </div>
+                        <div class="dark-card border-glow-cyan p-6 flex items-center gap-5 fragment fade-left">
+                            <div class="p-3 rounded-lg bg-dark-panel border border-neon-cyan text-neon-cyan"><i class="fa-solid fa-bug fa-xl"></i></div>
+                            <div><h4 class="font-bold text-white text-xl m-0">Inércia de Teste</h4><p class="text-sm text-slate-400 m-0 mt-1 leading-tight">Mocks impossíveis para rotas engessadas.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GANG OF FOUR BENTO GRID -->
+            <section class="h-full flex flex-col justify-center">
+                <div class="text-center mb-10">
+                    <span class="badge-cyan mb-4">A Solução</span>
+                    <h2 class="font-display text-5xl font-bold text-white">Gang of Four <span class="text-neon-cyan text-4xl">(GoF)</span></h2>
+                </div>
+                
+                <div class="grid grid-cols-3 grid-rows-2 gap-6 max-w-6xl mx-auto w-full h-[500px]">
+                    <div class="dark-card border-glow-cyan row-span-2 flex flex-col justify-between p-8 relative overflow-hidden group fragment fade-up">
+                        <div class="absolute -right-10 -top-10 text-[#00f0ff] opacity-[0.03] text-[12rem] group-hover:scale-110 group-hover:opacity-10 transition-all duration-500"><i class="fa-solid fa-hammer"></i></div>
+                        <div class="z-10">
+                            <div class="w-14 h-14 rounded-xl bg-dark-panel border border-neon-cyan flex items-center justify-center text-neon-cyan text-2xl mb-6 shadow-[0_0_15px_rgba(0,240,255,0.3)]"><i class="fa-solid fa-hammer"></i></div>
+                            <h3 class="font-display font-bold text-3xl text-white">Criacionais</h3>
+                            <p class="text-slate-300 text-lg">Abstraem a instanciação. O sistema torna-se independente de como seus objetos são criados.</p>
+                        </div>
+                        <div class="mt-4 border-t border-dark-border pt-4 font-mono text-neon-cyan text-sm font-bold tracking-wide z-10">
+                            <span class="block mb-1 hover:translate-x-2 transition-transform">→ Factory Method</span>
+                            <span class="block hover:translate-x-2 transition-transform">→ Builder</span>
+                        </div>
+                    </div>
+
+                    <div class="dark-card border-glow-purple col-span-2 flex items-center p-8 relative overflow-hidden group fragment fade-up">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[#bd00ff] opacity-[0.03] text-[10rem] group-hover:scale-110 group-hover:opacity-10 transition-all duration-500"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="flex-1 z-10">
+                            <div class="flex items-center gap-5 mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-dark-panel border border-neon-purple flex items-center justify-center text-neon-purple text-xl shadow-[0_0_15px_rgba(189,0,255,0.3)]"><i class="fa-solid fa-layer-group"></i></div>
+                                <h3 class="font-display font-bold text-3xl text-white m-0">Estruturais</h3>
+                            </div>
+                            <p class="text-slate-300 text-lg m-0 max-w-xl">Preocupam-se com a composição de classes para formar estruturas complexas.</p>
+                        </div>
+                        <div class="z-10 pl-6 border-l border-dark-border font-mono text-neon-purple text-sm font-bold tracking-wide hidden md:block">
+                            <span class="block mb-2">→ Facade</span>
+                            <span class="block">→ Decorator</span>
+                        </div>
+                    </div>
+
+                    <div class="dark-card border-glow-pink col-span-2 flex items-center p-8 relative overflow-hidden group fragment fade-up">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 text-[#ff0055] opacity-[0.03] text-[10rem] group-hover:scale-110 group-hover:opacity-10 transition-all duration-500"><i class="fa-solid fa-network-wired"></i></div>
+                        <div class="flex-1 z-10">
+                            <div class="flex items-center gap-5 mb-4">
+                                <div class="w-12 h-12 rounded-xl bg-dark-panel border border-neon-pink flex items-center justify-center text-neon-pink text-xl shadow-[0_0_15px_rgba(255,0,85,0.3)]"><i class="fa-solid fa-network-wired"></i></div>
+                                <h3 class="font-display font-bold text-3xl text-white m-0">Comportamentais</h3>
+                            </div>
+                            <p class="text-slate-300 text-lg m-0 max-w-xl">Atribuição de responsabilidades e algoritmos de comunicação entre os objetos.</p>
+                        </div>
+                        <div class="z-10 pl-6 border-l border-dark-border font-mono text-neon-pink text-sm font-bold tracking-wide hidden md:block">
+                            <span class="block mb-2">→ Strategy</span>
+                            <span class="block mb-2">→ State</span>
+                            <span class="block">→ Observer</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ARQUITETURA GERAL (MACRO) -->
+            <section class="h-full flex flex-col justify-center pt-4">
+                <div class="text-center mb-6">
+                    <span class="badge-cyan mb-2">Visão Macro</span>
+                    <h2 class="font-display text-5xl font-bold text-white">Arquitetura Geral</h2>
+                    <p class="text-slate-300 text-lg">Ecossistema de camadas e a injeção dos padrões.</p>
+                </div>
+                
+                <div class="w-full max-w-5xl mx-auto flex flex-col gap-3">
+                    
+                    <!-- CAMADA HTTP -->
+                    <div class="p-4 rounded-xl bg-dark-surface border border-dark-border relative fragment fade-up">
+                        <div class="absolute -left-2 -top-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest bg-dark-base px-2">Camada HTTP</div>
+                        <div class="flex items-center justify-center gap-6">
+                            <div class="dark-card border-glow-pink p-3 text-center w-40">
+                                <i class="fa-solid fa-user text-neon-pink text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Usuário</h4>
+                            </div>
+                            <div class="text-slate-500"><i class="fa-solid fa-arrow-right"></i></div>
+                            <div class="dark-card border-glow-purple p-3 text-center w-40">
+                                <i class="fa-solid fa-route text-neon-purple text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Router</h4>
+                            </div>
+                            <div class="text-slate-500"><i class="fa-solid fa-arrow-right"></i></div>
+                            <div class="dark-card border-glow-cyan p-3 text-center w-40">
+                                <i class="fa-solid fa-gamepad text-neon-cyan text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Controller</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-slate-500 fragment fade-down"><i class="fa-solid fa-arrow-down"></i> DTO / Requests</div>
+
+                    <!-- CAMADA DE SERVIÇO (CORE) -->
+                    <div class="p-4 rounded-xl bg-[#0f0f13] border border-neon-purple/40 relative shadow-[0_0_30px_rgba(189,0,255,0.1)] fragment fade-up">
+                        <div class="absolute -left-2 -top-2 text-[10px] font-mono text-neon-purple uppercase tracking-widest bg-dark-base px-2">Camada de Domínio / Core</div>
+                        <div class="flex items-center justify-center gap-6">
+                            <div class="dark-card border-glow-cyan p-3 text-center w-40">
+                                <i class="fa-solid fa-cubes text-neon-cyan text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Padrões GoF</h4>
+                                <p class="text-[10px] text-slate-400 m-0 mt-1">Factory, Strategy</p>
+                            </div>
+                            <div class="text-slate-500 text-xs text-center"><i class="fa-solid fa-arrow-left"></i><br>Delega</div>
+                            
+                            <!-- CORE NODE -->
+                            <div class="dark-card border-glow-purple p-4 text-center w-48 relative transform scale-110 z-10 bg-dark-panel">
+                                <div class="absolute inset-0 bg-neon-purple opacity-10 blur-xl rounded-xl"></div>
+                                <i class="fa-solid fa-microchip text-neon-purple text-3xl mb-1"></i>
+                                <h4 class="text-white font-bold text-md m-0">App Service</h4>
+                                <p class="text-[10px] text-slate-400 m-0 mt-1">Orquestração</p>
+                            </div>
+                            
+                            <div class="text-slate-500 text-xs text-center"><i class="fa-solid fa-arrow-right"></i><br>Dispara</div>
+                            <div class="dark-card border-glow-pink p-3 text-center w-40">
+                                <i class="fa-solid fa-bolt text-neon-pink text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Eventos</h4>
+                                <p class="text-[10px] text-slate-400 m-0 mt-1">Observers / Mail</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-slate-500 fragment fade-down"><i class="fa-solid fa-arrow-down"></i> Entidades</div>
+
+                    <!-- CAMADA DE PERSISTÊNCIA -->
+                    <div class="p-4 rounded-xl bg-dark-surface border border-dark-border relative fragment fade-up">
+                        <div class="absolute -left-2 -top-2 text-[10px] font-mono text-slate-500 uppercase tracking-widest bg-dark-base px-2">Camada de Dados</div>
+                        <div class="flex items-center justify-center gap-6">
+                            <div class="dark-card border-glow-pink p-3 text-center w-40 opacity-70">
+                                <i class="fa-solid fa-cloud text-neon-pink text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Storage</h4>
+                            </div>
+                            <div class="text-slate-500"><i class="fa-solid fa-arrow-left"></i></div>
+                            <div class="dark-card border-glow-cyan p-3 text-center w-40">
+                                <i class="fa-solid fa-layer-group text-neon-cyan text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Repository</h4>
+                            </div>
+                            <div class="text-slate-500"><i class="fa-solid fa-arrow-right"></i></div>
+                            <div class="dark-card border-glow-purple p-3 text-center w-40">
+                                <i class="fa-solid fa-database text-neon-purple text-2xl mb-1"></i>
+                                <h4 class="text-white font-bold text-sm m-0">Database</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- CLEAN ARCHITECTURE -->
+            <section class="h-full flex flex-col justify-center pt-8">
+                <div class="text-center mb-8">
+                    <span class="badge-pink mb-4">Separação de Preocupações</span>
+                    <h2 class="font-display text-5xl font-bold text-white">Arquitetura Limpa</h2>
+                    <p class="text-slate-300 text-xl">Isolamento absoluto da regra de negócio.</p>
+                </div>
+                
+                <div class="grid grid-cols-12 gap-4 max-w-5xl mx-auto w-full">
+                    
+                    <!-- Infraestrutura e Apresentação -->
+                    <div class="col-span-12 dark-card border-glow-pink p-6 fragment fade-up flex items-center justify-between overflow-hidden relative">
+                        <div class="relative z-10">
+                            <h3 class="text-neon-pink font-display font-bold text-2xl m-0 mb-1">Camada de Apresentação e Infraestrutura</h3>
+                            <p class="text-slate-400 font-mono text-sm m-0">Framework, Banco de Dados, Visualizações Blade e APIs Externas.</p>
+                        </div>
+                        <div class="text-[#ff0055] opacity-[0.05] text-[6rem] absolute -right-4 -bottom-4"><i class="fa-solid fa-globe"></i></div>
+                    </div>
+                    
+                    <!-- Aplicação -->
+                    <div class="col-span-5 dark-card border-glow-purple p-8 fragment fade-up flex flex-col justify-center overflow-hidden relative">
+                        <div class="text-[#bd00ff] opacity-[0.05] text-[8rem] absolute -left-4 -top-4"><i class="fa-solid fa-gears"></i></div>
+                        <div class="relative z-10 text-right">
+                            <h3 class="text-neon-purple font-display font-bold text-3xl m-0 mb-2">Camada de Aplicação</h3>
+                            <p class="text-slate-400 font-mono text-sm m-0">Casos de Uso, Serviços Orquestradores, Fábricas e Eventos.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Domínio / Core -->
+                    <div class="col-span-7 dark-card border-glow-cyan p-10 relative overflow-hidden fragment fade-up">
+                        <div class="absolute inset-0 bg-neon-cyan opacity-10 blur-2xl rounded-xl z-0"></div>
+                        <div class="absolute -right-4 -bottom-4 text-[#00f0ff] opacity-[0.05] text-[10rem]"><i class="fa-solid fa-gem"></i></div>
+                        <div class="relative z-10">
+                            <h3 class="text-neon-cyan font-display font-bold text-4xl m-0 mb-2">Domínio (O Núcleo)</h3>
+                            <p class="text-white font-mono text-lg m-0 mb-6">Regras de negócio puras, sem dependências.</p>
+                            
+                            <div class="bg-dark-base p-4 border border-[#00f0ff]/30 rounded-lg inline-block">
+                                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest block mb-1">
+                                    <i class="fa-solid fa-lock text-neon-cyan mr-1"></i> Core Protegido
+                                </span>
+                                <span class="text-white font-mono text-sm">Padrões de Estratégia e Estado</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- JORNADA DA REQUISIÇÃO (Fix Sync) -->
+            <section id="flow-section" class="h-full flex flex-col justify-center pt-8">
+                <div class="text-center mb-8">
+                    <span class="badge-purple mb-4">Arquitetura de Fluxo</span>
+                    <h2 class="font-display text-5xl font-bold text-white">Jornada da Requisição</h2>
+                    <p class="text-slate-300 text-xl">O ciclo de vida do pacote no ecossistema.</p>
+                </div>
+                
+                <div class="circuit-container max-w-6xl mx-auto">
+                    <div class="circuit-svg-container">
+                        <svg class="circuit-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path class="circuit-path" d="M 0 50 L 100 50" />
+                            <path class="circuit-glow" id="circuit-glow-line" d="M 0 50 L 100 50" />
+                        </svg>
+                    </div>
+
+                    <div class="circuit-node" id="n1">
+                        <i class="fa-solid fa-globe"></i>
+                        <div class="node-info top">
+                            <div class="node-title">1. Entrada</div>
+                            <div class="node-desc">Router / Controller</div>
+                        </div>
+                    </div>
+                    <div class="circuit-node" id="n2">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <div class="node-info bottom">
+                            <div class="node-title">2. Fachada</div>
+                            <div class="node-desc">Facade (Orquestração)</div>
+                        </div>
+                    </div>
+                    <div class="circuit-node" id="n3">
+                        <i class="fa-solid fa-industry"></i>
+                        <div class="node-info top">
+                            <div class="node-title">3. Criação</div>
+                            <div class="node-desc">Factory Method</div>
+                        </div>
+                    </div>
+                    <div class="circuit-node" id="n4">
+                        <i class="fa-solid fa-chess-knight"></i>
+                        <div class="node-info bottom">
+                            <div class="node-title">4. Execução</div>
+                            <div class="node-desc">Strategy / State</div>
+                        </div>
+                    </div>
+                    <div class="circuit-node" id="n5">
+                        <i class="fa-solid fa-database"></i>
+                        <div class="node-info top">
+                            <div class="node-title">5. Banco</div>
+                            <div class="node-desc">Builder Pattern</div>
+                        </div>
+                    </div>
+                    <div class="circuit-node" id="n6">
+                        <i class="fa-solid fa-satellite-dish"></i>
+                        <div class="node-info bottom">
+                            <div class="node-title">6. Efeitos</div>
+                            <div class="node-desc">Observer (Assíncrono)</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Factory -->
+            <section class="h-full flex flex-col justify-center">
+                <div class="text-center mb-8">
+                    <span class="badge-cyan mb-2">Padrão Criacional</span>
+                    <h2 class="font-display text-5xl font-bold text-white flex items-center justify-center gap-4">
+                        Factory Method <span class="text-2xl font-sans text-slate-500">(Método Fábrica)</span>
+                    </h2>
+                </div>
+                
+                <div class="w-full max-w-5xl mx-auto code-container-relative">
+                    
+                    <div class="code-layer fragment fade-out" data-fragment-index="1">
+                        <div class="mac-window">
+                            <div class="mac-header">
+                                <div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div>
+                                <div class="mac-title text-slate-400">UserProfileController.php (Antes)</div>
+                            </div>
+                            <pre><code class="language-php" data-trim>
+// ❌ O chamador conhece TODAS as regras de criação. Fere o Princípio OCP.
+if ($role === 'student') {
+    $profile = StudentProfile::create($data);
+    $user->profile_id = $profile->id;
+} elseif ($role === 'recruiter') {
+    $company = Company::firstOrCreate($companyData);
+    $profile = RecruiterProfile::create(array_merge($data, ['company_id' => $company->id]));
+    $user->profile_id = $profile->id;
+}
+                            </code></pre>
+                        </div>
+                    </div>
+
+                    <div class="code-layer fragment fade-in" data-fragment-index="1">
+                        <div class="mac-window neon-border">
+                            <div class="mac-header">
+                                <div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div>
+                                <div class="mac-title text-neon-cyan">UserProfileFactory.php (Depois)</div>
+                            </div>
+                            <pre><code class="language-php" data-trim>
+// ✅ A Fábrica abstrai a complexidade. Aberto para extensão, fechado para modificação.
+
+// 1. Solicitamos à Fábrica a ferramenta correta baseada no tipo (role)
+$creator = UserProfileFactory::make($role);
+
+// 2. A Interface UserProfileCreator garante o contrato padrão:
+$creator->createProfile($user, $data);
+                            </code></pre>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Strategy -->
+            <section class="h-full flex flex-col justify-center">
+                <div class="text-center mb-8">
+                    <span class="badge-purple mb-2">Padrão Comportamental</span>
+                    <h2 class="font-display text-5xl font-bold text-white flex items-center justify-center gap-4">
+                        Strategy <span class="text-2xl font-sans text-slate-500">(Estratégia)</span>
+                    </h2>
+                </div>
+                
+                <div class="w-full max-w-5xl mx-auto code-container-relative">
+                    
+                    <div class="code-layer fragment fade-out" data-fragment-index="1">
+                        <div class="mac-window">
+                            <div class="mac-header">
+                                <div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div>
+                                <div class="mac-title text-slate-400">UserRegistrationService.php (Antes)</div>
+                            </div>
+                            <pre><code class="language-php" data-trim>
+class UserRegistrationService 
+{
+    public function register(User $user) 
+    {
+        // ❌ O serviço está rigidamente acoplado ao envio de E-mail.
+        Mail::to($user)->send(new WelcomeEmail());
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+
+                    <div class="code-layer fragment fade-in" data-fragment-index="1">
+                        <div class="mac-window" style="border-color: rgba(189, 0, 255, 0.6); box-shadow: 0 0 20px rgba(189, 0, 255, 0.2), 0 20px 40px -10px rgba(0,0,0,0.8);">
+                            <div class="mac-header">
+                                <div class="mac-dot red"></div><div class="mac-dot yellow"></div><div class="mac-dot green"></div>
+                                <div class="mac-title text-neon-purple">NotificationStrategy.php (Depois)</div>
+                            </div>
+                            <pre><code class="language-php" data-trim>
+// 1. O Contrato de Estratégia
+interface NotificationStrategy {
+    public function send(User $user, string $message): void;
+}
+
+// 2. ✅ O Serviço recebe a Estratégia via Injeção de Dependência (Polimorfismo)
+class UserRegistrationService {
+    public function __construct(private NotificationStrategy $notifier) {}
+    
+    public function register(User $user) {
+        $this->notifier->send($user, 'Bem vindo ao SyncMatch!'); 
+    }
+}
+                            </code></pre>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- BOAS PRATICAS (BENTO ASSIMETRICO) -->
+            <section class="h-full flex flex-col justify-center">
+                <div class="text-center mb-10">
+                    <span class="badge-pink mb-4">Boas Práticas</span>
+                    <h2 class="font-display text-5xl font-bold text-white">Ecossistema Saudável</h2>
+                    <p class="text-slate-300 text-xl">Engenharia aplicada em toda a base de código.</p>
+                </div>
+                
+                <div class="grid grid-cols-4 grid-rows-2 gap-5 max-w-7xl mx-auto w-full h-[480px]">
+                    <div class="dark-card border-glow-cyan col-span-2 row-span-2 p-10 flex flex-col justify-center relative overflow-hidden fragment fade-up">
+                        <div class="absolute -right-10 -bottom-10 text-[#00f0ff] opacity-[0.03] text-[14rem]"><i class="fa-solid fa-cube"></i></div>
+                        <div class="w-16 h-16 rounded-2xl bg-dark-panel border border-neon-cyan flex items-center justify-center text-neon-cyan text-3xl mb-6 shadow-[0_0_15px_rgba(0,240,255,0.3)]"><i class="fa-solid fa-cube"></i></div>
+                        <h3 class="font-display font-bold text-4xl text-white mb-4">Princípios SOLID</h3>
+                        <p class="text-slate-300 text-xl">Responsabilidade Única (SRP), Aberto/Fechado (OCP) e Inversão de Dependência garantidos.</p>
+                    </div>
+
+                    <div class="dark-card border-glow-purple col-span-2 p-8 flex items-center gap-6 fragment fade-up">
+                        <div class="w-14 h-14 rounded-xl bg-dark-panel border border-neon-purple flex items-center justify-center text-neon-purple text-2xl shrink-0 shadow-[0_0_15px_rgba(189,0,255,0.3)]"><i class="fa-solid fa-syringe"></i></div>
+                        <div>
+                            <h4 class="font-display font-bold text-2xl text-white m-0">Injeção de Dependência</h4>
+                            <p class="text-slate-400 text-md m-0 mt-2 font-mono">Service Container resolvendo 100%.</p>
+                        </div>
+                    </div>
+
+                    <div class="dark-card border-glow-pink p-6 flex flex-col justify-center items-center text-center fragment fade-up">
+                        <div class="text-neon-pink text-4xl mb-4"><i class="fa-solid fa-rocket"></i></div>
+                        <h4 class="font-display font-bold text-xl text-white m-0">Event-Driven</h4>
+                    </div>
+
+                    <div class="dark-card border-glow-cyan p-6 flex flex-col justify-center items-center text-center fragment fade-up" style="--neon-border-color: rgba(255,255,255,0.3);">
+                        <div class="text-white text-4xl mb-4"><i class="fa-solid fa-layer-group"></i></div>
+                        <h4 class="font-display font-bold text-xl text-white m-0">Clean Layers</h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SCORECARD / METRICAS -->
+            <section class="h-full flex flex-col justify-center pt-8">
+                <div class="text-center mb-8">
+                    <span class="badge-cyan mb-4">Provando o Valor</span>
+                    <h2 class="font-display text-5xl font-bold text-white">Scorecard de Arquitetura</h2>
+                    <p class="text-slate-300 text-xl">Métricas de avaliação executiva pós-refatoração.</p>
+                </div>
+                
+                <div class="grid grid-cols-12 gap-4 max-w-5xl mx-auto w-full">
+                    
+                    <!-- SOLID (Destaque Principal) -->
+                    <div class="col-span-6 row-span-2 dark-card border-glow-cyan p-8 text-left flex flex-col justify-center fragment zoom-in">
+                        <h4 class="text-slate-400 font-bold tracking-widest text-sm uppercase m-0 mb-4"><i class="fa-solid fa-shield-halved text-neon-cyan mr-2"></i>Princípios SOLID</h4>
+                        <div class="text-[6rem] font-display font-black text-white leading-none mb-2">96<span class="text-neon-cyan text-4xl">%</span></div>
+                        <p class="text-slate-400 text-sm m-0 mt-2">Aderência rigorosa à responsabilidade única e inversão de dependência em toda a base de código.</p>
+                    </div>
+                    
+                    <!-- GoF Patterns -->
+                    <div class="col-span-6 row-span-1 dark-card border-glow-purple p-6 flex items-center justify-between fragment zoom-in">
+                        <div>
+                            <h4 class="text-slate-400 font-bold tracking-widest text-sm uppercase m-0 mb-1"><i class="fa-solid fa-cubes text-neon-purple mr-2"></i>Padrões GoF</h4>
+                            <p class="text-slate-500 text-xs m-0">Padronização de catálogos</p>
+                        </div>
+                        <div class="text-[4rem] font-display font-black text-white leading-none">100<span class="text-neon-purple text-3xl">%</span></div>
+                    </div>
+                    
+                    <!-- Clean Arch -->
+                    <div class="col-span-3 row-span-1 dark-card border-glow-pink p-6 text-center flex flex-col justify-center fragment zoom-in">
+                        <div class="text-[3rem] font-display font-black text-white leading-none mb-2">88<span class="text-neon-pink text-xl">%</span></div>
+                        <h4 class="text-slate-400 font-bold tracking-widest text-[10px] uppercase m-0">Arquitetura Limpa</h4>
+                    </div>
+                    
+                    <!-- Segurança -->
+                    <div class="col-span-3 row-span-1 dark-card border-glow-cyan p-6 text-center flex flex-col justify-center fragment zoom-in">
+                        <div class="text-[3rem] font-display font-black text-white leading-none mb-2">95<span class="text-neon-cyan text-xl">%</span></div>
+                        <h4 class="text-slate-400 font-bold tracking-widest text-[10px] uppercase m-0">Segurança</h4>
+                    </div>
+                    
+                    <!-- Performance -->
+                    <div class="col-span-4 row-span-1 dark-card border-glow-purple p-6 flex items-center justify-between fragment zoom-in">
+                        <h4 class="text-slate-400 font-bold tracking-widest text-xs uppercase m-0"><i class="fa-solid fa-bolt text-neon-purple mr-2"></i>Performance</h4>
+                        <div class="text-[2.5rem] font-display font-black text-white leading-none">90<span class="text-neon-purple text-lg">%</span></div>
+                    </div>
+                    
+                    <!-- Escalabilidade -->
+                    <div class="col-span-8 row-span-1 dark-card border-glow-cyan p-6 flex items-center justify-between fragment zoom-in">
+                        <div>
+                            <h4 class="text-slate-400 font-bold tracking-widest text-xs uppercase m-0 mb-1"><i class="fa-solid fa-arrow-trend-up text-neon-cyan mr-2"></i>Escalabilidade Horizontal</h4>
+                            <p class="text-slate-500 text-xs m-0">Capacidade de crescer sem atritos estruturais.</p>
+                        </div>
+                        <div class="text-[2.5rem] font-display font-black text-white leading-none">92<span class="text-neon-cyan text-lg">%</span></div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ENCERRAMENTO -->
+            <section class="h-full flex flex-col items-center justify-center">
+                <div class="text-center max-w-6xl mx-auto w-full">
+                    
+                    <div class="mb-12">
+                        <h1 class="font-display text-[4rem] font-bold text-white mb-2 leading-tight">Padrões não são regras.</h1>
+                        <h1 class="font-display text-[4rem] font-bold text-neon-cyan mb-8 leading-tight">São vocabulário.</h1>
+                    </div>
+                    
+                    <div class="dark-card border-glow-cyan p-14 relative mx-auto text-center z-10 w-full max-w-4xl" style="background: #0f0f13;">
+                        <i class="fa-solid fa-quote-left absolute -top-8 -left-8 text-6xl text-[#00f0ff] opacity-20"></i>
+                        <p class="text-2xl text-slate-300 font-light italic mb-8 leading-relaxed">
+                            "Projetar software orientado a objetos é difícil. <br>
+                            Projetar software orientado a objetos <strong class="text-white font-bold">reutilizável</strong> <br>
+                            é ainda mais difícil."
+                        </p>
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="w-12 h-1 bg-neon-cyan rounded-full"></div>
+                            <p class="font-mono text-neon-cyan font-bold tracking-widest uppercase text-lg m-0">
+                                Gang of Four (GoF)
+                            </p>
+                            <div class="w-12 h-1 bg-neon-cyan rounded-full"></div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/reveal.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.0.4/plugin/highlight/highlight.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            controls: true,
+            progress: true,
+            center: false,
+            transition: 'fade', 
+            backgroundTransition: 'fade',
+            plugins: [ RevealHighlight ],
+            width: 1400,
+            height: 900,
+            margin: 0.05,
+            minScale: 0.2,
+            maxScale: 2.0
+        });
+
+        let circuitInterval;
+        Reveal.on('slidechanged', event => {
+            if(event.currentSlide.id === 'flow-section') {
+                const nodes = document.querySelectorAll('#flow-section .circuit-node');
+                const glowLine = document.getElementById('circuit-glow-line');
+                
+                let step = 0;
+                const totalNodes = 6;
+                const pathLength = 100;
+                
+                clearInterval(circuitInterval);
+                nodes.forEach(n => { n.classList.remove('active', 'done'); });
+                glowLine.style.strokeDashoffset = pathLength;
+                
+                circuitInterval = setInterval(() => {
+                    const offset = pathLength - ((step / (totalNodes - 1)) * pathLength);
+                    glowLine.style.strokeDashoffset = offset;
+
+                    if (step > 0 && step <= totalNodes) {
+                        nodes[step-1].classList.remove('active');
+                        nodes[step-1].classList.add('done');
+                    }
+                    
+                    if (step < totalNodes) {
+                        nodes[step].classList.add('active');
+                        step++;
+                    } 
+                    else if (step === totalNodes) {
+                        step++; 
+                    } 
+                    else {
+                        nodes.forEach(n => { n.classList.remove('active', 'done'); });
+                        glowLine.style.strokeDashoffset = pathLength;
+                        step = 0;
+                    }
+                }, 1200);
+            } else {
+                clearInterval(circuitInterval);
+            }
+        });
+    </script>
+</body>
+</html>
